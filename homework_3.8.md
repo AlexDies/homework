@@ -244,7 +244,7 @@
 	May 06 17:56:12 netology4 Keepalived_vrrp[1704]: (VI_1) Backup received priority 0 advertisement
 	May 06 17:56:13 netology4 Keepalived_vrrp[1704]: (VI_1) Entering MASTER STATE
 
-Проверим балансировку работу балансера №1 при повторном запросе curl с хоста-клиента:
+Проверим работу балансера №1 при повторном curl запросе с хоста-клиента:
 	
 	root@netology4:/home/vagrant# ipvsadm -Ln
 	IP Virtual Server version 1.2.1 (size=4096)
