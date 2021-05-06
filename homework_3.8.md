@@ -208,7 +208,7 @@
 	root@netology1:/home/vagrant# wc -l /var/log/nginx/access.log
 	26 /var/log/nginx/access.log
 
-Результат ipvsadm -Ln на балансере №2 Maser:
+Результат ipvsadm -Ln на балансере №2 Master:
 	
 	root@netology5:/home/vagrant# ipvsadm -Ln
 	IP Virtual Server version 1.2.1 (size=4096)
