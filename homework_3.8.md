@@ -15,7 +15,7 @@
 Приложите конфигурационные файлы, которые у вас получились, и продемонстрируйте работу получившейся конструкции. Используйте для директора отдельный хост, не совмещая его с риалом!
 Подобная схема возможна, но выходит за рамки рассмотренного на лекции.__
 
-Реализована схема из 5 виртуальных машин. Использовался следующий vagrant file для быстрой развертки:
+# Реализована схема из 5 виртуальных машин. Использовался следующий vagrant file для быстрой развертки:
 	
 	# -*- mode: ruby -*-
 	# vi: set ft=ruby :
@@ -53,7 +53,7 @@
 	netology4  - balancer №1 172.28.128.30  (VIP 172.28.128.200:80)
 	netology5  - balancer №2 172.28.128.40  (VIP 172.28.128.200:80)
 ---
-#Конфигурация балансера №1:
+# Конфигурация балансера №1:
 
 	 vrrp_script chk_nginx {
 	    script "systemctl status nginx"
@@ -97,7 +97,7 @@
 		}
 	}
 ---
-#Конфигурация балансера №2:
+# Конфигурация балансера №2:
 	
 	vrrp_script chk_nginx {
 	    script "systemctl status nginx"
@@ -141,7 +141,7 @@
 		}
 	}
 ---
-#Службы keepalived запущены на обоих балансерах:
+# Службы keepalived запущены на обоих балансерах:
 Балансер №1
 	
 	keepalived.service - Keepalive Daemon (LVS and VRRP)
@@ -190,7 +190,7 @@
 	May 06 17:38:29 netology5 Keepalived_vrrp[682]: (VI_1) received lower priority (90) advert from 172.28.128.40 - discarding
 	May 06 17:38:30 netology5 Keepalived_vrrp[682]: (VI_1) Entering MASTER STATE
 ---
-#Запуск curl на хосте-клиенте:
+# Запуск curl на хосте-клиенте:
 
 	root@netology3:/home/vagrant# for i in {1..50}; do curl -I -s 172.28.128.200>/dev/null; done
 
@@ -218,7 +218,7 @@
 	  -> 172.28.128.10:80             Route   1      0          50
 	  -> 172.28.128.20:80             Route   1      0          50
 ---
-#Отклюючим службу keepalived на балансере №2
+# Отклюючим службу keepalived на балансере №2
 	
 	systemctl stop keepalived
 	Балансер №1 стал Master:
