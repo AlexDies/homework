@@ -218,9 +218,12 @@
 	  -> 172.28.128.10:80             Route   1      0          50
 	  -> 172.28.128.20:80             Route   1      0          50
 ---
-# Отключим службу keepalived на балансере №2, проверим переход балансера №1 с BACKUP на MASTER
-	
-	systemctl stop keepalived
+# Остановка службы keepalived на балансере №2, проверим переход балансера №1 с BACKUP на MASTER
+
+Остановка службы: systemctl stop keepalived 
+
+Статус балансера №1
+
 	Балансер №1 стал Master:
 	keepalived.service - Keepalive Daemon (LVS and VRRP)
 	     Loaded: loaded (/lib/systemd/system/keepalived.service; enabled; vendor preset: enabled)
@@ -254,7 +257,8 @@
 	  -> 172.28.128.10:80             Route   1      0          25
 	  -> 172.28.128.20:80             Route   1      0          25
 
-Балансировка работает.
+Балансировка работает
+
 ---
 3. __В лекции мы использовали только 1 VIP адрес для балансировки.
 У такого подхода несколько отрицательных моментов, один из которых – невозможность активного использования нескольких хостов (1 адрес может только переехать с master на standby).
