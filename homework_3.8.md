@@ -53,7 +53,8 @@
 	netology5  - balancer №2 172.28.128.40  (VIP 172.28.128.200:80)
 ---
 #Конфигурация балансера №1:
-	vrrp_script chk_nginx {
+
+	 vrrp_script chk_nginx {
 	    script "systemctl status nginx"
 	    interval 2
 	}
@@ -96,6 +97,7 @@
 	}
 ---
 #Конфигурация балансера №2:
+	
 	vrrp_script chk_nginx {
 	    script "systemctl status nginx"
 	    interval 2
@@ -140,6 +142,7 @@
 ---
 #Службы keepalived запущены на обоих балансерах:
 Балансер №1
+	
 	keepalived.service - Keepalive Daemon (LVS and VRRP)
 	     Loaded: loaded (/lib/systemd/system/keepalived.service; enabled; vendor preset: enabled)
 	     Active: active (running) since Thu 2021-05-06 17:36:15 UTC; 7min ago
@@ -163,7 +166,8 @@
 	May 06 17:38:30 netology4 Keepalived_vrrp[734]: (VI_1) Entering BACKUP STATE
 
 Балансер №2
-	 keepalived.service - Keepalive Daemon (LVS and VRRP)
+	
+	keepalived.service - Keepalive Daemon (LVS and VRRP)
 	     Loaded: loaded (/lib/systemd/system/keepalived.service; enabled; vendor preset: enabled)
 	     Active: active (running) since Thu 2021-05-06 17:36:36 UTC; 8min ago
 	   Main PID: 675 (keepalived)
@@ -186,21 +190,25 @@
 	May 06 17:38:30 netology5 Keepalived_vrrp[682]: (VI_1) Entering MASTER STATE
 ---
 #Запуск curl на хосте-клиенте:
-root@netology3:/home/vagrant# for i in {1..50}; do curl -I -s 172.28.128.200>/dev/null; done
+
+	root@netology3:/home/vagrant# for i in {1..50}; do curl -I -s 172.28.128.200>/dev/null; done
 
 Обращение на real server 1
+	
 	root@netology2:/home/vagrant# wc -l /var/log/nginx/access.log
 	1 /var/log/nginx/access.log
 	root@netology2:/home/vagrant# wc -l /var/log/nginx/access.log
 	26 /var/log/nginx/access.log
 
 Обращение на real server 2
+	
 	root@netology1:/home/vagrant# wc -l /var/log/nginx/access.log
 	1 /var/log/nginx/access.log
 	root@netology1:/home/vagrant# wc -l /var/log/nginx/access.log
 	26 /var/log/nginx/access.log
 
 Результат ipvsadm -Ln на балансере №2 Maser:
+	
 	root@netology5:/home/vagrant# ipvsadm -Ln
 	IP Virtual Server version 1.2.1 (size=4096)
 	Prot LocalAddress:Port Scheduler Flags
@@ -210,6 +218,7 @@ root@netology3:/home/vagrant# for i in {1..50}; do curl -I -s 172.28.128.200>/de
 	  -> 172.28.128.20:80             Route   1      0          50
 ---
 #Отклюючим службу keepalived на балансере №2
+	
 	systemctl stop keepalived
 	Балансер №1 стал Master:
 	keepalived.service - Keepalive Daemon (LVS and VRRP)
@@ -235,6 +244,7 @@ root@netology3:/home/vagrant# for i in {1..50}; do curl -I -s 172.28.128.200>/de
 	May 06 17:56:13 netology4 Keepalived_vrrp[1704]: (VI_1) Entering MASTER STATE
 
 Проверим балансировку с хост-клиента:
+	
 	root@netology4:/home/vagrant# ipvsadm -Ln
 	IP Virtual Server version 1.2.1 (size=4096)
 	Prot LocalAddress:Port Scheduler Flags
