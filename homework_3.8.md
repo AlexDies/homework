@@ -218,7 +218,7 @@
 	  -> 172.28.128.10:80             Route   1      0          50
 	  -> 172.28.128.20:80             Route   1      0          50
 ---
-# Отклюючим службу keepalived на балансере №2
+# Отключим службу keepalived на балансере №2, проверим переход балансера №1 с BACKUP на MASTER
 	
 	systemctl stop keepalived
 	Балансер №1 стал Master:
@@ -244,7 +244,7 @@
 	May 06 17:56:12 netology4 Keepalived_vrrp[1704]: (VI_1) Backup received priority 0 advertisement
 	May 06 17:56:13 netology4 Keepalived_vrrp[1704]: (VI_1) Entering MASTER STATE
 
-Проверим балансировку с хост-клиента:
+Проверим балансировку работу балансера №1 при повторном запросе curl с хоста-клиента:
 	
 	root@netology4:/home/vagrant# ipvsadm -Ln
 	IP Virtual Server version 1.2.1 (size=4096)
