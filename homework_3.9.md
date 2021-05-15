@@ -164,3 +164,116 @@
     Accept-Ranges: bytes
     
 Доступ есть, всё работает!
+
+---
+__ДОПОЛНИТЕЛЬНОЕ ЗАДАНИЕ. Вместо ручного подкладывания сертификата в nginx, воспользуйтесь consul-template для автоматического подтягивания сертификата из Vault.__
+
+Создание default.hlc для consule-template:
+
+     vault {
+       address = "http://127.0.0.1:8200"
+       token = "s.nuRDtndn6lNZ2F3Ev1sPTogA"
+       renew_token = true
+
+     retry {
+         enabled = true
+         attempts = 5
+         backoff = "250ms"
+       }
+     }
+
+     template {
+       source      = "/etc/consul-template.d/yet-cert.tpl"
+       destination = "/etc/nginx/cert/yet.crt"
+       perms       = "0600"
+       command     = "systemctl reload nginx"
+     }
+
+     template {
+       source      = "/etc/consul-template.d/yet-key.tpl"
+       destination = "/etc/nginx/cert/yet.key"
+       perms       = "0600"
+       command     = "systemctl reload nginx"
+     }
+
+Создание шаблонов для ключа и сертификата используя ранее созданную политику в Vault example-dot-com:
+     
+     {{- /* yet-key.tpl */ -}}
+     {{ with secret "pki_int/issue/example-dot-com" "common_name=netology.example.com" "ttl=2m"}}
+     {{ .Data.private_key }}{{ end }}
+     
+     {{- /* yet-cert.tpl */ -}}
+     {{ with secret "pki_int/issue/example-dot-com" "common_name=netology.example.com" "ttl=2m" }}
+     {{ .Data.certificate }}
+     {{ .Data.issuing_ca }}{{ end }}
+     
+Меняем настройки сертификата и ключа для Nginx:
+
+     server {
+             listen 80 default_server;
+             listen [::]:80 default_server;
+             listen 443 ssl default_server;
+             listen [::]:443 ssl default_server;
+             ssl_certificate /etc/nginx/cert/yet.crt;
+             ssl_certificate_key /etc/nginx/cert/yet.key;
+             
+Проверяем работу по HHTPS:
+
+     root@vagrant:/etc/consul-template.d# curl -I https://netology.example.com
+     HTTP/1.1 200 OK
+     Server: nginx/1.18.0 (Ubuntu)
+     Date: Sat, 15 May 2021 13:20:27 GMT
+     Content-Type: text/html
+     Content-Length: 612
+     Last-Modified: Tue, 04 May 2021 17:17:21 GMT
+     Connection: keep-alive
+     ETag: "609181a1-264"
+     Accept-Ranges: bytes
+     
+Удалим сертификаты и запустим consul-template:
+
+     root@vagrant:/etc/consul-template.d# rm /etc/nginx/cert/yet.*
+     root@vagrant:/etc/consul-template.d# consul-template -config=/etc/consul-template.d/default.hlc 
+Проверим статус Nginx и перезапуск конфигурации:
+
+     root@vagrant:/etc/consul-template.d# systemctl status nginx
+     ● nginx.service - A high performance web server and a reverse proxy server
+          Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)
+          Active: active (running) since Sat 2021-05-15 13:21:55 UTC; 5min ago
+            Docs: man:nginx(8)
+         Process: 8444 ExecStartPre=/usr/sbin/nginx -t -q -g daemon on; master_process on; (code=exited, stat>
+         Process: 8455 ExecStart=/usr/sbin/nginx -g daemon on; master_process on; (code=exited, status=0/SUCC>
+         Process: 8515 ExecReload=/usr/sbin/nginx -g daemon on; master_process on; -s reload (code=exited, st>
+        Main PID: 8456 (nginx)
+           Tasks: 2 (limit: 1113)
+          Memory: 3.1M
+          CGroup: /system.slice/nginx.service
+                  ├─8456 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
+                  └─8516 nginx: worker process
+
+     May 15 13:22:20 vagrant systemd[1]: Reloading A high performance web server and a reverse proxy server.
+     May 15 13:22:20 vagrant systemd[1]: Reloaded A high performance web server and a reverse proxy server.
+     May 15 13:22:31 vagrant systemd[1]: Reloading A high performance web server and a reverse proxy server.
+     May 15 13:22:32 vagrant systemd[1]: Reloaded A high performance web server and a reverse proxy server.
+     May 15 13:22:57 vagrant systemd[1]: Reloading A high performance web server and a reverse proxy server.
+     May 15 13:22:57 vagrant systemd[1]: Reloaded A high performance web server and a reverse proxy server.
+     May 15 13:23:10 vagrant systemd[1]: Reloading A high performance web server and a reverse proxy server.
+     May 15 13:23:10 vagrant systemd[1]: Reloaded A high performance web server and a reverse proxy server.
+     May 15 13:24:24 vagrant systemd[1]: Reloading A high performance web server and a reverse proxy server.
+     May 15 13:24:24 vagrant systemd[1]: Reloaded A high performance web server and a reverse proxy server.
+Проверим доступность по HTTPS:
+   
+     curl -I https://netology.example.com
+     HTTP/1.1 200 OK
+     Server: nginx/1.18.0 (Ubuntu)
+     Date: Sat, 15 May 2021 13:24:42 GMT
+     Content-Type: text/html
+     Content-Length: 612
+     Last-Modified: Tue, 04 May 2021 17:17:21 GMT
+     Connection: keep-alive
+     ETag: "609181a1-264"
+     Accept-Ranges: bytes
+
+Сертификаты были созданы автоматически шаблоном consul-template, конфигурация Nginx обновлена
+
+PS. Не получилось запустить consul-template отдельным демоном. При запуске появляется ошибка:
