@@ -276,4 +276,57 @@ __ДОПОЛНИТЕЛЬНОЕ ЗАДАНИЕ. Вместо ручного по�
 
 Сертификаты были созданы автоматически шаблоном consul-template, конфигурация Nginx обновлена
 
-PS. Не получилось запустить consul-template отдельным демоном. При запуске появляется ошибка:
+# PS. Не получилось запустить consul-template отдельным демоном согласно приведенной в ДЗ ссылки. При запуске появляется ошибка.
+Юнит:
+
+     [Unit]
+     Description=consul-template
+     Requires=network-online.target
+     After=network-online.target
+
+     [Service]
+     EnvironmentFile=-/etc/sysconfig/consul-template
+     Restart=on-failure
+     ExecStart=/usr/local/bin/consul-template $OPTIONS -config='/etc/consul-template.d/default.hcl'
+     KillSignal=SIGINT
+
+     [Install]
+     WantedBy=multi-user.target
+
+Статус после запуска:
+
+     ● consul-template.service - consul-template
+          Loaded: loaded (/etc/systemd/system/consul-template.service; enabled; vendor preset: enabled)
+          Active: failed (Result: exit-code) since Sat 2021-05-15 13:45:50 UTC; 384ms ago
+         Process: 9234 ExecStart=/usr/local/bin/consul-template $OPTIONS -config=/etc/consul-template.d/default.hcl (code=exited, status=15)
+        Main PID: 9234 (code=exited, status=15)
+
+     May 15 13:45:50 vagrant systemd[1]: consul-template.service: Scheduled restart job, restart counter is at 5.
+     May 15 13:45:50 vagrant systemd[1]: Stopped consul-template.
+     May 15 13:45:50 vagrant systemd[1]: consul-template.service: Start request repeated too quickly.
+     May 15 13:45:50 vagrant systemd[1]: consul-template.service: Failed with result 'exit-code'.
+     May 15 13:45:50 vagrant systemd[1]: Failed to start consul-template.
+Права на исполнение есть:
+
+     root@vagrant:/etc/consul-template.d# ls -l /etc/systemd/system/
+     total 68
+     lrwxrwxrwx 1 root root    9 Dec 23 07:53 apt-daily.service -> /dev/null
+     lrwxrwxrwx 1 root root    9 Dec 23 07:53 apt-daily-upgrade.service -> /dev/null
+     drwxr-xr-x 2 root root 4096 Dec 23 07:49 cloud-final.service.wants
+     -rwxr-xr-x 1 root root  323 May 15 13:44 consul-template.service
+Лог journalctl следующий 
+
+     root@vagrant:/etc/consul-template.d# journalctl -u consul-template.service -f
+     -- Logs begin at Tue 2021-05-04 17:16:07 UTC. --
+     May 15 13:49:16 vagrant systemd[1]: Stopped consul-template.
+     May 15 13:49:16 vagrant systemd[1]: Started consul-template.
+     May 15 13:49:16 vagrant consul-template[9342]: 2021/05/15 13:49:16 [ERR] (cli) missing file/folder: /etc/consul-template.d/default.hcl: stat /etc/consul-template.d/default.hcl: no such file or directory
+     May 15 13:49:16 vagrant systemd[1]: consul-template.service: Main process exited, code=exited, status=15/n/a
+     May 15 13:49:16 vagrant systemd[1]: consul-template.service: Failed with result 'exit-code'.
+     May 15 13:49:17 vagrant systemd[1]: consul-template.service: Scheduled restart job, restart counter is at 5.
+     May 15 13:49:17 vagrant systemd[1]: Stopped consul-template.
+     May 15 13:49:17 vagrant systemd[1]: consul-template.service: Start request repeated too quickly.
+     May 15 13:49:17 vagrant systemd[1]: consul-template.service: Failed with result 'exit-code'.
+     May 15 13:49:17 vagrant systemd[1]: Failed to start consul-template.
+     
+Подскажите, пожалуйста, в чем может быть проблема?     
