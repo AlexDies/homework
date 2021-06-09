@@ -62,6 +62,24 @@ ___
     123
     321
     qweqweq
+   
+   
+### Доработка домашнего задания 2:
+
+Смутила переменная is_change = False, подумал, что данный флаг нужно использовать в скрипте)
+А так действительно смысла в новом условии не было, убрал лишшнее. Результат ниже:
+   
+    #!/usr/bin/env python3
+    
+    import os
+    
+    bash_command = ["cd /home/vagrant/netology/sysadm-homeworks", "git status"]
+    result_os = os.popen(' && '.join(bash_command)).read()
+    for result in result_os.split('\n'):
+        if result.find('modified') != -1:
+            prepare_result = result.replace('\tmodified:   ', '')
+            print(prepare_result)
+          
 ___
 **3. Доработать скрипт выше так, чтобы он мог проверять не только локальный репозиторий в текущей директории, а также умел воспринимать путь к репозиторию, который мы передаём как входной параметр. 
 Мы точно знаем, что начальство коварное и будет проверять работу этого скрипта в директориях, которые не являются локальными репозиториями.**
@@ -92,19 +110,40 @@ ___
     123
     321
     qweqweq
+    
+### Доработка домашнего задания 3:    
 
-**P.S.Вопрос:** 
-Пытался сделать проверку в цикле следующим образом:
+Добавил проверку на директорию через модуль os.path.exists
 
-     if result.find('.git') != -1:
-            print('Данная директория не является репозиторием')
-            break
+    #!/usr/bin/env python3
 
-Но результат выполнения команды, если директория не является репозиторием - сразу же выдает в **stdout: fatal: not a git repository (or any of the parent directories): .git**
+    import os
+    import sys
 
-**Как можно отследить это состояние для цикла if?
-В bash можно посмотреть код возврата $? на предыдущую команду, и в зависимости от результата применить условие.
-А как отследить, что была ошибка (fatal) и выдать сообщение Print, что это не репозиторий? В result.find ничего не выводится и поиск по .git не осуществляется.**
+    path_repo = sys.argv[1]
+    check_dir = os.path.exists(f'{path_repo}.git')
+    if check_dir != True:
+        print('Данная директория не является репозиторием')
+        exit()
+    bash_command = [f'cd {path_repo}', "git status"]
+    result_os = os.popen(' && '.join(bash_command)).read()
+    for result in result_os.split('\n'):
+        if result.find('modified') != -1:
+            prepare_result = result.replace('\tmodified:   ', '')
+            print(prepare_result)
+
+**P/S. Подскажите, пожалуйста, а как можно было бы реализовать через try except проверку директории? Пробовал искать ошибку fatal(выводит git status), но что-то не получилось. Ранее не работал с исключениями, если есть возможность - прошу подсказать.**
+
+Вывод скрипта:
+    
+    vagrant@vagrant:~/netology$ vagrant@vagrant:~/netology$ ./test.py /home/vagrant/netology/sysadm-homeworks/
+    123
+    321
+    qweqweq
+    
+    vagrant@vagrant:~/netology$ ./test.py /home/vagrant/netology/testing1
+    Данная директория не является репозиторием
+
 ___
 **4. Наша команда разрабатывает несколько веб-сервисов, доступных по http. 
 Мы точно знаем, что на их стенде нет никакой балансировки, кластеризации, за DNS прячется конкретный IP сервера, где установлен сервис. 
