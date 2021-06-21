@@ -77,5 +77,79 @@ ___
     - При обнаружении ошибки в исходном файле - указать в стандартном выводе строку с ошибкой синтаксиса и её номер
     - Полученный файл должен иметь имя исходного файла, разница в наименовании обеспечивается разницей расширения файлов
 
+**До конца выполнить не удалось, получился следующий код:**
 
+      import sys
+      import json
+      import yaml
+      import os
+      
+      js = None
+      name_file = sys.argv[1]
+      suffix = ('.json', '.yml', '.yaml')
+      if name_file.endswith(suffix):
+          with open(name_file, 'r+') as js_f, open(name_file, 'r+') as js_d:
+              js = yaml.safe_load(js_f)
+              try:
+                  ds = json.load(js_d)
+                  print("Формат файла json, файл будет перекодирован в yaml")
+                  js_d.seek(0)
+                  js_d.truncate()
+                  js_d.write(yaml.dump(ds, indent=2, explicit_start=True))
+              except json.decoder.JSONDecodeError:
+                  print("Этот файл yml формата, файл будет перекодирован в json")
+                  js_f.seek(0)
+                  js_f.truncate()
+                  js_f.write(json.dumps(js))
+          if name_file.endswith('.json'):
+              pre, ext = os.path.splitext(name_file)
+              os.rename(name_file, pre + ".yaml")
+              print("Новый формат файла .yaml")
+          elif name_file.endswith('.yaml'):
+              pre, ext = os.path.splitext(name_file)
+              os.rename(name_file, pre + ".json")
+              print("Новый формат файла .json")
+      
+      else:
+          print('Формат файла не json или yaml')
+          exit()
 
+**Возникли вопросы:**
+1. Не совсем понял, как можно поменять формат файлу? Если использовать внутри конструкции with open,
+то будет появляться ошибка в формате: PermissionError: [WinError 32] Процесс не может получить доступ к файлу, так как этот файл занят другим процессом: 'testjs.yaml' -> 'testjs.yaml'
+
+Поэтому вынес в цикл if elif после закрытия констрункции with с файлом. Но в таком случае, непонятно, что внутри файла - перепутанный формат или содержание?
+
+**1.1 Какое условие в таком случае использовать для проверки?**
+
+**1.2 Или в данном случае нельзя использолвать конструкцию with open с файлом, а использовать просто open, закрывать его и менять формат с помощью os.rename?**
+
+2. Также пока не разобрался как спарсить сообщение об ошибках на конкретной строчке и колонке, так как выдает много информации в stdout:
+
+         Traceback (most recent call last):
+           File "C:\Users\AlexD\PycharmProjects\python_test\home4.5.py", line 11, in <module>
+             js = yaml.safe_load(js_f)
+           File "C:\Users\AlexD\PycharmProjects\python_test\venv\lib\site-packages\yaml\__init__.py", line 162, in safe_load
+             return load(stream, SafeLoader)
+           File "C:\Users\AlexD\PycharmProjects\python_test\venv\lib\site-packages\yaml\__init__.py", line 114, in load
+             return loader.get_single_data()
+           File "C:\Users\AlexD\PycharmProjects\python_test\venv\lib\site-packages\yaml\constructor.py", line 49, in get_single_data
+             node = self.get_single_node()
+           File "C:\Users\AlexD\PycharmProjects\python_test\venv\lib\site-packages\yaml\composer.py", line 36, in get_single_node
+             document = self.compose_document()
+           File "C:\Users\AlexD\PycharmProjects\python_test\venv\lib\site-packages\yaml\composer.py", line 58, in compose_document
+             self.get_event()
+           File "C:\Users\AlexD\PycharmProjects\python_test\venv\lib\site-packages\yaml\parser.py", line 118, in get_event
+             self.current_event = self.state()
+           File "C:\Users\AlexD\PycharmProjects\python_test\venv\lib\site-packages\yaml\parser.py", line 193, in parse_document_end
+             token = self.peek_token()
+           File "C:\Users\AlexD\PycharmProjects\python_test\venv\lib\site-packages\yaml\scanner.py", line 129, in peek_token
+             self.fetch_more_tokens()
+           File "C:\Users\AlexD\PycharmProjects\python_test\venv\lib\site-packages\yaml\scanner.py", line 223, in fetch_more_tokens
+             return self.fetch_value()
+           File "C:\Users\AlexD\PycharmProjects\python_test\venv\lib\site-packages\yaml\scanner.py", line 577, in fetch_value
+             raise ScannerError(None, None,
+         yaml.scanner.ScannerError: mapping values are not allowed here
+           in "testjs.json", line 2, column 5
+
+**Как в таком случае стоит "вытащить" строчку in "testjs.json", line 2, column 5 из exept?**
