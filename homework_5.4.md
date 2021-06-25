@@ -167,6 +167,224 @@ ___
 ___
 **Выполнение ДЗ:**
 
+**Базовый образ - amazoncorreto**
+
+1. Dockerfile
+
+         FROM amazoncorretto:latest
+         
+         RUN yum update -y && \
+             yum install wget -y
+         RUN wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo && \
+             rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+         RUN yum install jenkins -y
+         
+         EXPOSE 8080
+         
+         ENTRYPOINT ["java"]
+         CMD ["-jar","/usr/lib/jenkins/jenkins.war"]
+
+2. Создание образа (часть лога удалил, чтобы не нагромождать):
+
+**vagrant@vagrant:~$ docker build -t jenkinstest -f docker2/dockerfile .**
+
+      Sending build context to Docker daemon  2.967MB
+      Step 1/7 : FROM amazoncorretto:latest
+       ---> 4ab161ed37a2
+      Step 2/7 : RUN yum update -y &&     yum install wget -y
+       ---> Running in 928304bce836
+      
+      ================================================================================
+       Package                   Arch      Version                Repository     Size
+      ================================================================================
+      Updating:
+       bzip2-libs                x86_64    1.0.6-13.amzn2.0.3     amzn2-core     40 k
+       curl                      x86_64    7.61.1-12.amzn2.0.4    amzn2-core    342 k
+       glib2                     x86_64    2.56.1-9.amzn2.0.1     amzn2-core    2.4 M
+       glibc                     x86_64    2.26-47.amzn2          amzn2-core    3.3 M
+       glibc-common              x86_64    2.26-47.amzn2          amzn2-core    770 k
+       glibc-langpack-en         x86_64    2.26-47.amzn2          amzn2-core    286 k
+       glibc-minimal-langpack    x86_64    2.26-47.amzn2          amzn2-core     30 k
+       libcrypt                  x86_64    2.26-47.amzn2          amzn2-core     50 k
+       libcurl                   x86_64    7.61.1-12.amzn2.0.4    amzn2-core    286 k
+       libgcc                    x86_64    7.3.1-13.amzn2         amzn2-core     98 k
+       libstdc++                 x86_64    7.3.1-13.amzn2         amzn2-core    445 k
+       libxml2                   x86_64    2.9.1-6.amzn2.5.3      amzn2-core    661 k
+       nss                       x86_64    3.53.1-7.amzn2         amzn2-core    860 k
+       nss-sysinit               x86_64    3.53.1-7.amzn2         amzn2-core     66 k
+       nss-tools                 x86_64    3.53.1-7.amzn2         amzn2-core    531 k
+       openldap                  x86_64    2.4.44-23.amzn2.0.1    amzn2-core    350 k
+       python                    x86_64    2.7.18-1.amzn2.0.4     amzn2-core     93 k
+       python-libs               x86_64    2.7.18-1.amzn2.0.4     amzn2-core    7.5 M
+      
+      Transaction Summary
+      ================================================================================
+      Upgrade  18 Packages
+      
+      Total download size: 18 M
+      Downloading packages:
+      Delta RPMs disabled because /usr/bin/applydeltarpm not installed.
+      --------------------------------------------------------------------------------
+      
+      
+      ================================================================================
+       Package       Arch          Version                    Repository         Size
+      ================================================================================
+      Installing:
+       wget          x86_64        1.14-18.amzn2.1            amzn2-core        547 k
+      Installing for dependencies:
+       libidn        x86_64        1.28-4.amzn2.0.2           amzn2-core        209 k
+      
+      Transaction Summary
+      ================================================================================
+      Install  1 Package (+1 Dependent package)
+      
+      Total download size: 757 k
+      Installed size: 2.6 M
+      Downloading packages:
+      --------------------------------------------------------------------------------
+      Total                                              1.3 MB/s | 757 kB  00:00
+      Running transaction check
+      Running transaction test
+      Transaction test succeeded
+      Running transaction
+        Installing : libidn-1.28-4.amzn2.0.2.x86_64                               1/2
+        Installing : wget-1.14-18.amzn2.1.x86_64                                  2/2
+        Verifying  : wget-1.14-18.amzn2.1.x86_64                                  1/2
+        Verifying  : libidn-1.28-4.amzn2.0.2.x86_64                               2/2
+      
+      Installed:
+        wget.x86_64 0:1.14-18.amzn2.1
+      
+      Dependency Installed:
+        libidn.x86_64 0:1.28-4.amzn2.0.2
+      
+      Complete!
+      Removing intermediate container 928304bce836
+       ---> dd2ebf5e9612
+      Step 3/7 : RUN wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo &&     rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+       ---> Running in 504aa63097cc
+      --2021-06-25 09:39:35--  https://pkg.jenkins.io/redhat-stable/jenkins.repo
+      Resolving pkg.jenkins.io (pkg.jenkins.io)... 151.101.2.133, 151.101.66.133, 151.101.130.133, ...
+      Connecting to pkg.jenkins.io (pkg.jenkins.io)|151.101.2.133|:443... connected.
+      HTTP request sent, awaiting response... 200 OK
+      Length: 85
+      Saving to: ‘/etc/yum.repos.d/jenkins.repo’
+      
+           0K                                                       100% 6.37M=0s
+      
+      2021-06-25 09:39:35 (6.37 MB/s) - ‘/etc/yum.repos.d/jenkins.repo’ saved [85/85]
+      
+      Removing intermediate container 504aa63097cc
+       ---> dbce4fb0c248
+      Step 4/7 : RUN yum install jenkins -y
+      Dependencies Resolved
+      
+      ================================================================================
+       Package                      Arch    Version                 Repository   Size
+      ================================================================================
+      Installing:
+       jenkins                      noarch  2.289.1-1.1             jenkins      71 M
+      Installing for dependencies:
+       acl                          x86_64  2.2.51-14.amzn2         amzn2-core   82 k
+       audit-libs                   x86_64  2.8.1-3.amzn2.1         amzn2-core   99 k
+       cracklib                     x86_64  2.9.0-11.amzn2.0.2      amzn2-core   80 k
+       cracklib-dicts               x86_64  2.9.0-11.amzn2.0.2      amzn2-core  3.6 M
+       cryptsetup-libs              x86_64  1.7.4-4.amzn2           amzn2-core  224 k
+       dbus                         x86_64  1:1.10.24-7.amzn2       amzn2-core  247 k
+       dbus-libs                    x86_64  1:1.10.24-7.amzn2       amzn2-core  169 k
+       device-mapper                x86_64  7:1.02.146-4.amzn2.0.2  amzn2-core  289 k
+       device-mapper-libs           x86_64  7:1.02.146-4.amzn2.0.2  amzn2-core  320 k
+       elfutils-default-yama-scope  noarch  0.176-2.amzn2           amzn2-core   33 k
+       elfutils-libs                x86_64  0.176-2.amzn2           amzn2-core  293 k
+       gzip                         x86_64  1.5-10.amzn2            amzn2-core  130 k
+       kmod                         x86_64  25-3.amzn2.0.2          amzn2-core  111 k
+       kmod-libs                    x86_64  25-3.amzn2.0.2          amzn2-core   59 k
+       libcap-ng                    x86_64  0.7.5-4.amzn2.0.4       amzn2-core   25 k
+       libfdisk                     x86_64  2.30.2-2.amzn2.0.4      amzn2-core  240 k
+       libpwquality                 x86_64  1.2.3-5.amzn2           amzn2-core   84 k
+       libsemanage                  x86_64  2.5-11.amzn2            amzn2-core  152 k
+       libsmartcols                 x86_64  2.30.2-2.amzn2.0.4      amzn2-core  156 k
+       libutempter                  x86_64  1.1.6-4.amzn2.0.2       amzn2-core   25 k
+       lz4                          x86_64  1.7.5-2.amzn2.0.1       amzn2-core   99 k
+       pam                          x86_64  1.1.8-23.amzn2.0.1      amzn2-core  715 k
+       procps-ng                    x86_64  3.3.10-26.amzn2         amzn2-core  292 k
+       qrencode-libs                x86_64  3.4.1-3.amzn2.0.2       amzn2-core   50 k
+       shadow-utils                 x86_64  2:4.1.5.1-24.amzn2.0.2  amzn2-core  1.1 M
+       systemd                      x86_64  219-78.amzn2.0.14       amzn2-core  5.0 M
+       systemd-libs                 x86_64  219-78.amzn2.0.14       amzn2-core  408 k
+       ustr                         x86_64  1.0.4-16.amzn2.0.3      amzn2-core   96 k
+       util-linux                   x86_64  2.30.2-2.amzn2.0.4      amzn2-core  2.3 M
+      
+      Transaction Summary
+      ================================================================================
+      Install  1 Package (+29 Dependent packages)
+      
+      Total download size: 87 M
+      Installed size: 127 M
+      Downloading packages:
+      http://pkg.jenkins.io/redhat-stable/jenkins-2.289.1-1.1.noarch.rpm: [Errno 12] Timeout on https://get.jenkins.io/redhat-stable/jenkins-2.289.1-1.1.noarch.rpm: (28, 'Resolving timed out after 5055 milliseconds')
+      Trying other mirror.
+      --------------------------------------------------------------------------------
+      Total                                              3.2 MB/s |  87 MB  00:26
+      
+      Installed:
+        jenkins.noarch 0:2.289.1-1.1
+      Complete!
+      Removing intermediate container 8c71c803e250
+       ---> 5d01e56fe63f
+      Step 5/7 : EXPOSE 8080
+       ---> Running in 568c81db2788
+      Removing intermediate container 568c81db2788
+       ---> e7ca97d59fab
+      Step 6/7 : ENTRYPOINT ["java"]
+       ---> Running in 4e4005ceee13
+      Removing intermediate container 4e4005ceee13
+       ---> 84878c89580e
+      Step 7/7 : CMD ["-jar","/usr/lib/jenkins/jenkins.war"]
+       ---> Running in 59aa011e1671
+      Removing intermediate container 59aa011e1671
+       ---> 63f2d4b7629e
+      Successfully built 63f2d4b7629e
+      Successfully tagged jenkinstest:latest
+
+3. Проверка образа:
+   
+         vagrant@vagrant:~$ docker images
+         REPOSITORY          TAG       IMAGE ID       CREATED         SIZE
+         jenkinstest         latest    63f2d4b7629e   5 minutes ago   1.08GB
+
+4. Создание и запуск контейнера:
+
+         vagrant@vagrant:~$ docker run --name jenk1 -p 8081:8080 -d jenkinstest
+         8ef0022f132ff27016fa648be00387a4fe5aa9f195ba09aadcb4fdb31025f3db
+         vagrant@vagrant:~$ docker ps -a
+         CONTAINER ID   IMAGE            COMMAND                  CREATED             STATUS                       PORTS                    NAMES
+         8ef0022f132f   jenkinstest      "java -jar /usr/lib/…"   1 second ago        Up 1 second                  0.0.0.0:8081->8080/tcp   jenk1
+
+5. Доступ к WEB-интерфейсу по порту 8082 (в VirtualBox настроено перенаправление с 8081 на 8082)
+
+СКРИНШОТ
+
+6. Ссылка на dockerhub: https://hub.docker.com/layers/155688842/alexdies/homework/ver1/images/sha256-e2455fe305334d87360cd5e0036e2cfa57dfd4ebb2b0acbea758fc11e025a50b?context=explore
+___
+**Базовый образ - ubuntu:latest**
+
+
+
+
+
+yum update -y
+yum install wget -y
+wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+yum install jenkins -y
+
+java -jar /usr/lib/jenkins/jenkins.war &
+cat /root/.jenkins/secret.key
+
+
+
 
 
 ___
