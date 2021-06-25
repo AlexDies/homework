@@ -92,7 +92,7 @@ ___
         Successfully built b574d6e4ee4f
         Successfully tagged archlinux1:latest
 
-**2. Создание контейнера и вывод в интерактивный режим:**
+2. Создание контейнера и вывод в интерактивный режим:
 
 **root@vagrant:/home/vagrant/docker1# docker run -ti archlinux1**
 
@@ -364,7 +364,7 @@ ___
 
 5. Доступ к WEB-интерфейсу по порту 8082 (в VirtualBox настроено перенаправление с 8081 на 8082)
 
-СКРИНШОТ
+![img.png](img.png)
 
 6. Ссылка на dockerhub: https://hub.docker.com/layers/155688842/alexdies/homework/ver1/images/sha256-e2455fe305334d87360cd5e0036e2cfa57dfd4ebb2b0acbea758fc11e025a50b?context=explore
 ___
