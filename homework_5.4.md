@@ -370,22 +370,88 @@ ___
 ___
 **Базовый образ - ubuntu:latest**
 
+1. Dockerfile
+
+         FROM ubuntu:latest
+         
+         RUN apt-get update && \
+         apt-get install wget -y && \
+         apt-get install gnupg -y
+         RUN wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | apt-key add -
+         RUN echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list
+         
+         RUN apt-get update && \
+             apt-get install -y jenkins
+         
+         RUN apt search openjdk && \
+             apt install openjdk-11-jdk -y
+         
+         EXPOSE 8080
+         
+         ENTRYPOINT ["java"]
+         CMD ["-jar", "/usr/share/jenkins/jenkins.war"]
 
 
+2. Создание образа (часть лога удалил, чтобы не нагромождать):
 
+**vagrant@vagrant:~/docker2$ docker build -t jenkisubuntu1 -f ./dock2 .**
+   
+      Sending build context to Docker daemon  3.072kB
+      Step 1/9 : FROM ubuntu:latest
+       ---> 9873176a8ff5
+      Step 2/9 : RUN apt-get update && apt-get install wget -y && apt-get install gnupg -y
+       ---> Using cache
+       ---> 11e254760fd3
+      Step 3/9 : RUN wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | apt-key add -
+       ---> Using cache
+       ---> 2db753d7df9b
+      Step 4/9 : RUN echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list
+       ---> Using cache
+       ---> 360ca1ee8e38
+      
+      Step 5/9 : RUN apt-get update &&     apt-get install -y jenkins
+       ---> Using cache
+       ---> 2c07b3f92e0b
+      Step 6/9 : RUN apt search openjdk &&     apt install openjdk-11-jdk -y
+       ---> Using cache
+       ---> 0180ac296ce6
+      Step 7/9 : EXPOSE 8080
+       ---> Using cache
+       ---> 9112ee141542
+      Step 8/9 : ENTRYPOINT ["java"]
+       ---> Using cache
+       ---> 6adb6ca25357
+      Step 9/9 : CMD ["-jar", "/usr/share/jenkins/jenkins.war"]
+       ---> Running in b4a0a3867532
+      Removing intermediate container b4a0a3867532
+       ---> 0fbcd32b2aa2
+      Successfully built 0fbcd32b2aa2
+      Successfully tagged jenkisubuntu1:latest
 
-yum update -y
-yum install wget -y
-wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
-rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
-yum install jenkins -y
+3. Проверка образа:
+   
+         vagrant@vagrant:~/docker2$ docker images
+         REPOSITORY          TAG       IMAGE ID       CREATED          SIZE
+         jenkisubuntu1       latest    0fbcd32b2aa2   4 minutes ago    848MB
 
-java -jar /usr/lib/jenkins/jenkins.war &
-cat /root/.jenkins/secret.key
+4. Создание и запуск контейнера:
 
+         vagrant@vagrant:~/docker2$ docker run --name jenkinsubu -p 8081:8080 -d jenkisubuntu1
+         042dd73ef55a87c2456933a1f5f552740333e87ca6db904042f3266e309aeedd
+         vagrant@vagrant:~/docker2$  docker ps -a
+         CONTAINER ID   IMAGE            COMMAND                  CREATED          STATUS                    PORTS                    NAMES
+         042dd73ef55a   jenkisubuntu1    "java -jar /usr/shar…"   4 seconds ago    Up 3 seconds              0.0.0.0:8081->8080/tcp   jenkinsubu
 
+5. Присвоен тэг `ver2` :
 
+         vagrant@vagrant:~/docker2$ docker tag 0fbcd32b2aa2 alexdies/homework:ver2
+         vagrant@vagrant:~/docker2$ docker images
+         REPOSITORY          TAG       IMAGE ID       CREATED          SIZE
+         alexdies/homework   ver2      0fbcd32b2aa2   7 minutes ago    848MB
 
+6. Ссылка на dockerhub:
+
+https://hub.docker.com/layers/156053029/alexdies/homework/ver2/images/sha256-f6adc4898f69e8ed56f17d3982ca528d30487b2074fa757b22e47df28cbe2e99?context=explore
 
 ___
 **Задача 3**
