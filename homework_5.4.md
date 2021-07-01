@@ -485,4 +485,116 @@ ___
 ___
 **Выполнение ДЗ:**
 
+1. Dockerfile:
+
+         FROM node
+         
+         WORKDIR /usr/node/
+         
+         RUN apt-get update && \
+             git clone https://github.com/simplicitesoftware/nodejs-demo.git
+         
+         WORKDIR /usr/node/nodejs-demo/
+         
+         RUN npm install
+         RUN npm audit fix
+         
+         EXPOSE 3000
+         
+         ENTRYPOINT ["npm"]
+         CMD ["start", "0.0.0.0"]
+
+
+2. Контейнер с ubuntu запущен:
+   
+         vagrant@vagrant:~/docker2$ docker ps -a
+         CONTAINER ID   IMAGE            COMMAND               CREATED          STATUS                    PORTS
+         NAMES
+         09d3558e87d5   ubuntu           "bash"                23 minutes ago   Up 23 minutes
+
+
+3. Создание сети в docker:
+
+         vagrant@vagrant:~/docker2$ docker network create testnetwork
+         70c91bb6d55634a5211ced16a6f7248b52701a709b269f9679c725eec0a82093
+         
+         vagrant@vagrant:~/docker2$ docker network ls
+         NETWORK ID     NAME          DRIVER    SCOPE
+         f16982dce8a3   bridge        bridge    local
+         0e4029f88356   host          host      local
+         9f962113e49a   none          null      local
+         70c91bb6d556   testnetwork   bridge    local
+         
+         vagrant@vagrant:~/docker2$ docker network connect testnetwork 09d3558e87d5
+         vagrant@vagrant:~/docker2$ docker network connect testnetwork 78ac300e8a6c
+
+         vagrant@vagrant:~/docker2$ docker network inspect testnetwork
+         [
+             {
+                 "Name": "testnetwork",
+                 "Id": "70c91bb6d55634a5211ced16a6f7248b52701a709b269f9679c725eec0a82093",
+                 "Created": "2021-07-01T18:18:40.178520996Z",
+                 "Scope": "local",
+                 "Driver": "bridge",
+                 "EnableIPv6": false,
+                 "IPAM": {
+                     "Driver": "default",
+                     "Options": {},
+                     "Config": [
+                         {
+                             "Subnet": "172.18.0.0/16",
+                             "Gateway": "172.18.0.1"
+                         }
+                     ]
+                 },
+                 "Internal": false,
+                 "Attachable": false,
+                 "Ingress": false,
+                 "ConfigFrom": {
+                     "Network": ""
+                 },
+                 "ConfigOnly": false,
+                 "Containers": {
+                     "09d3558e87d592b70f2c5cee2246d83189a93e04e374e0a5420cd943d0ed6180": {
+                         "Name": "ubuntu",
+                         "EndpointID": "d2954365d06959043506f16da5f779aaef9a5b79657c09ce31dc228ce16447a3",
+                         "MacAddress": "02:42:ac:12:00:02",
+                         "IPv4Address": "172.18.0.2/16",
+                         "IPv6Address": ""
+                     },
+                     "78ac300e8a6cc22197ac8e4b79415066c6da721b067748826c80728086171f35": {
+                         "Name": "nodetest",
+                         "EndpointID": "274d914b6fd812d02abafdc84b6b6c1d7a7c287cb849490e1f3a11b7dad9b02b",
+                         "MacAddress": "02:42:ac:12:00:03",
+                         "IPv4Address": "172.18.0.3/16",
+                         "IPv6Address": ""
+                     }
+                 },
+                 "Options": {},
+                 "Labels": {}
+             }
+         ]
+
+
+4. Подключение к контейнеру с ubuntu в интерактивном режиме:
+
+         vagrant@vagrant:~/docker2$ docker exec -ti ubuntu bash
+         
+         Установка curl, так как он отсутствует:
+         root@09d3558e87d5:/# apt-get update
+         root@09d3558e87d5:/# apt-get install curl
+
+5. Успешный ответ из контейнера с ubuntu (09d3558e87d5) на адрес контейнера 78ac300e8a6c (node) и порт 3000
+
+         root@09d3558e87d5:/# curl -I 78ac300e8a6c:3000
+         HTTP/1.1 200 OK
+         Cache-Control: private, no-cache, no-store, no-transform, must-revalidate
+         Expires: -1
+         Pragma: no-cache
+         Content-Type: text/html; charset=utf-8
+         Content-Length: 525282
+         ETag: W/"803e2-IVQUXWXJ9fD8tEEM1hYrsRNzNZQ"
+         Date: Thu, 01 Jul 2021 18:27:07 GMT
+         Connection: keep-alive
+         Keep-Alive: timeout=5
 
