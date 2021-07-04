@@ -6,6 +6,30 @@ ___
 
 Приведите получившуюся команду или docker-compose манифест.
 ___
+**Выполнение ДЗ:**
+
+Docker-compose манифест:
+
+    version: '3.1'
+    
+    volumes:
+      dbdata:
+      backup:
+    
+    services:
+      pg_db:
+        image: postgres:12
+        restart: always
+        environment:
+          - POSTGRES_PASSWORD=test
+          - POSTGRES_USER=test
+        volumes:
+          - dbdata:/var/lib/postgresql/data
+          - backup:/backup
+        ports:
+          - ${POSTGRES_PORT:-5432}:5432
+
+___
 **Задача 2**
 
 В БД из задачи 1:
