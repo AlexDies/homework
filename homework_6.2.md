@@ -60,6 +60,25 @@ ___
 - SQL-запрос для выдачи списка пользователей с правами над таблицами test_db
 - список пользователей с правами над таблицами test_db
 ___
+**Выполнение ДЗ:**
+Создание test_admin_user:
+test=# CREATE USER test_admin_user;
+
+      CREATE ROLE
+      test=# \password
+      Enter new password:
+      Enter it again:
+      test=# \du
+                                            List of roles
+          Role name    |                         Attributes                         | Member of
+      -----------------+------------------------------------------------------------+-----------
+       test            | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
+       test_admin_user |                                                            | {}
+
+
+
+
+___
 **Задача 3**
 
 Используя SQL синтаксис - наполните таблицы следующими тестовыми данными:
