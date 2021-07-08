@@ -348,5 +348,74 @@ ___
 ___
 **Выполнение ДЗ:**
 
+**Создание бэкапа:**
 
+    pg_dump -U test test_db > /backup/test_db1.dump
 
+**Запуск нового контейнера с Postgres:**
+
+    vagrant@vagrant:~$ docker run --name testsql -e POSTGRES_PASSWORD=test -v /var/lib/docker/volumes/vagrant_backup/_data/:/backup1 -d -p 5432:5432 postgres:12
+
+**Восстановление БД test_db:**
+
+    root@bbfe30bbbad3:/# psql -U postgres  < /backup1/test_db1.dump
+    
+    SET
+    SET
+    SET
+    SET
+    SET
+     set_config
+    ------------
+    
+    (1 row)
+    
+    SET
+    SET
+    SET
+    SET
+    SET
+    SET
+    CREATE TABLE
+    ERROR:  role "test" does not exist
+    CREATE SEQUENCE
+    ERROR:  role "test" does not exist
+    ALTER SEQUENCE
+    CREATE SEQUENCE
+    ERROR:  role "test" does not exist
+    ALTER SEQUENCE
+    CREATE TABLE
+    ERROR:  role "test" does not exist
+    CREATE SEQUENCE
+    ERROR:  role "test" does not exist
+    ALTER SEQUENCE
+    ALTER TABLE
+    ALTER TABLE
+    ALTER TABLE
+    COPY 5
+    COPY 5
+     setval
+    --------
+         10
+    (1 row)
+    
+     setval
+    --------
+          9
+    (1 row)
+    
+     setval
+    --------
+          6
+    (1 row)
+    
+    ALTER TABLE
+    ALTER TABLE
+    CREATE INDEX
+    ALTER TABLE
+    ERROR:  role "test_admin_user" does not exist
+    ERROR:  role "test_simple_user" does not exist
+    ERROR:  role "test_admin_user" does not exist
+    ERROR:  role "test_simple_user" does not exist
+
+База перенеслась, кроме ролей, так как изначально их не бэкапил.
