@@ -159,6 +159,146 @@ ___
 ___
 **Выполнение ДЗ:**
 
+**Установка профиля:**
+
+    mysql> SET profiling = 1;
+    Query OK, 0 rows affected, 1 warning (0.00 sec)
+    
+    mysql> SHOW PROFILES;
+    +----------+------------+-------------------+
+    | Query_ID | Duration   | Query             |
+    +----------+------------+-------------------+
+    |        1 | 0.00007275 | SET profiling = 1 |
+    +----------+------------+-------------------+
+    1 row in set, 1 warning (0.00 sec)
+
+**Просмотр движка таблицы:**
+
+    mysql> SHOW TABLE STATUS \G;
+    *************************** 1. row ***************************
+               Name: orders
+             Engine: InnoDB
+            Version: 10
+         Row_format: Dynamic
+               Rows: 5
+     Avg_row_length: 3276
+        Data_length: 16384
+    Max_data_length: 0
+       Index_length: 0
+          Data_free: 0
+     Auto_increment: 6
+        Create_time: 2021-07-11 13:36:40
+        Update_time: 2021-07-11 13:36:40
+         Check_time: NULL
+          Collation: utf8mb4_0900_ai_ci
+           Checksum: NULL
+     Create_options:
+            Comment:
+    1 row in set (0.00 sec)
+
+**Изменения движка таблицы на MyISAM:**
+
+    mysql> ALTER TABLE orders ENGINE = MyISAM;
+    Query OK, 5 rows affected (0.01 sec)
+    Records: 5  Duplicates: 0  Warnings: 0
+
+
+    mysql> SHOW TABLE STATUS \G;
+    *************************** 1. row ***************************
+               Name: orders
+             Engine: MyISAM
+            Version: 10
+         Row_format: Dynamic
+               Rows: 5
+     Avg_row_length: 3276
+        Data_length: 16384
+    Max_data_length: 0
+       Index_length: 0
+          Data_free: 0
+     Auto_increment: 6
+        Create_time: 2021-07-11 15:40:19
+        Update_time: 2021-07-11 13:36:40
+         Check_time: NULL
+          Collation: utf8mb4_0900_ai_ci
+           Checksum: NULL
+     Create_options:
+            Comment:
+    1 row in set (0.00 sec)
+
+Отображение профайлера:
+
+    mysql> SHOW PROFILES;
+    +----------+------------+--------------------------------------------------+
+    | Query_ID | Duration   | Query                                            |
+    +----------+------------+--------------------------------------------------+
+    |        7 | 0.00015525 | SHOW ENGINES                                     |
+    |        8 | 0.00004175 | SHOW TABLE STATUS FROM information_schema.TABLES |
+    |        9 | 0.00080800 | SHOW TABLE STATUS                                |
+    |       10 | 0.00003800 | SHOW TABLE                                       |
+    |       11 | 0.00064675 | SHOW TABLES                                      |
+    |       12 | 0.00078575 | SHOW TABLE STATUS                                |
+    |       13 | 0.00059325 | SHOW TABLE STATUS WHERE 'Engine'                 |
+    |       14 | 0.00076950 | SHOW TABLE STATUS                                |
+    |       15 | 0.00072975 | SHOW TABLE STATUS LIKE 'Engine'                  |
+    |       16 | 0.00073875 | SHOW TABLE STATUS LIKE 'Engine'                  |
+    |       17 | 0.00072375 | SHOW TABLE STATUS                                |
+    |       18 | 0.00075850 | SHOW TABLE STATUS                                |
+    |       19 | 0.01241000 | ALTER TABLE orders ENGINE = MyISAM               |
+    |       20 | 0.00099850 | SHOW TABLE STATUS                                |
+    |       21 | 0.00014675 | SELECT * FROM orders                             |
+    +----------+------------+--------------------------------------------------+
+**Изменения движка таблицы на InnoDB:**
+
+    mysql> ALTER TABLE orders ENGINE = InnoDB;
+    Query OK, 5 rows affected (0.02 sec)
+    Records: 5  Duplicates: 0  Warnings: 0
+
+
+
+    mysql> SHOW TABLE STATUS \G;
+    *************************** 1. row ***************************
+               Name: orders
+             Engine: InnoDB
+            Version: 10
+         Row_format: Dynamic
+               Rows: 5
+     Avg_row_length: 3276
+        Data_length: 16384
+    Max_data_length: 0
+       Index_length: 0
+          Data_free: 0
+     Auto_increment: 6
+        Create_time: 2021-07-11 15:42:07
+        Update_time: 2021-07-11 13:36:40
+         Check_time: NULL
+          Collation: utf8mb4_0900_ai_ci
+           Checksum: NULL
+     Create_options:
+            Comment:
+    1 row in set (0.00 sec)
+Отображение профайлера:
+
+    mysql> SHOW PROFILES;
+    +----------+------------+------------------------------------+
+    | Query_ID | Duration   | Query                              |
+    +----------+------------+------------------------------------+
+    |       10 | 0.00003800 | SHOW TABLE                         |
+    |       11 | 0.00064675 | SHOW TABLES                        |
+    |       12 | 0.00078575 | SHOW TABLE STATUS                  |
+    |       13 | 0.00059325 | SHOW TABLE STATUS WHERE 'Engine'   |
+    |       14 | 0.00076950 | SHOW TABLE STATUS                  |
+    |       15 | 0.00072975 | SHOW TABLE STATUS LIKE 'Engine'    |
+    |       16 | 0.00073875 | SHOW TABLE STATUS LIKE 'Engine'    |
+    |       17 | 0.00072375 | SHOW TABLE STATUS                  |
+    |       18 | 0.00075850 | SHOW TABLE STATUS                  |
+    |       19 | 0.01241000 | ALTER TABLE orders ENGINE = MyISAM |
+    |       20 | 0.00099850 | SHOW TABLE STATUS                  |
+    |       21 | 0.00014675 | SELECT * FROM orders               |
+    |       22 | 0.02536450 | ALTER TABLE orders ENGINE = InnoDB |
+    |       23 | 0.00096225 | SHOW TABLE STATUS                  |
+    |       24 | 0.00019550 | SELECT * FROM orders               |
+    +----------+------------+------------------------------------+
+    15 rows in set, 1 warning (0.00 sec)
 
 ___
 **Задача 4**
@@ -174,6 +314,32 @@ ___
 - Размер файла логов операций 100 Мб
 
 Приведите в ответе измененный файл `my.cnf`.
-
 ___
 **Выполнение ДЗ:**
+
+**Всё что находится в файле /etc/mysql/my.conf:**
+
+    [mysqld]
+    pid-file        = /var/run/mysqld/mysqld.pid
+    socket          = /var/run/mysqld/mysqld.sock
+    datadir         = /var/lib/mysql
+    secure-file-priv= NULL
+    
+    # Custom config should go here
+    !includedir /etc/mysql/conf.d/
+
+**P/S. Такое малое количество параметров обусловлено контейнером? Или по умолчанию параметров также нет и при необходимости они прописываются вручную?**
+
+**Изменения параметров под ТЗ:**
+
+    [mysqld]
+    pid-file        = /var/run/mysqld/mysqld.pid
+    socket          = /var/run/mysqld/mysqld.sock
+    datadir         = /var/lib/mysql
+    secure-file-priv= NULL
+    
+    innodb_log_buffer_size = 1M
+    innodb_log_file_size = 100M
+    innodb_buffer_pool_size = 700M
+    innodb_file_per_table = 1
+    innodb_flush_method = O_DSYNC
