@@ -164,6 +164,75 @@ ___
 Если же речь о другом - прошу помочь, каких-то отдельных запросов найти не удалось..**
 
 **2.Также немного непонятно, как аналогичную информацию можно посмотреть в IDE, например, в DBeaver? Только "ручками" перебирая все? Нельзя ли использоваить функционал psql по типу \dp или же есть всё же SQL-запрос?**
+___
+**Корректировка ДЗ 2**
+
+Скорректировал таблицу clients:
+
+    ALTER TABLE public.clients1 ALTER COLUMN заказ TYPE int4 USING заказ::int4;
+    ALTER TABLE public.clients1 ALTER COLUMN заказ DROP NOT NULL;
+
+Вывод таблицы clients:
+
+    test_db=# \d clients
+                                           Table "public.clients"
+          Column       |       Type        | Collation | Nullable |               Default
+    -------------------+-------------------+-----------+----------+-------------------------------------
+     id                | integer           |           | not null | nextval('clients_id_seq'::regclass)
+     фамилия           | character varying |           | not null |
+     страна_проживания | character varying |           | not null |
+     заказ             | integer           |           |          |
+    Indexes:
+        "clients_pkey" PRIMARY KEY, btree (id)
+        "страна_проживания" btree ("страна_проживания")
+    Foreign-key constraints:
+        "clients_заказ_fkey" FOREIGN KEY ("заказ") REFERENCES orders(id)
+
+Выполнил запрос на пользователей:
+
+    test_db=# SELECT * FROM information_schema.table_privileges WHERE table_name = 'clients' OR table_name = 'orders';
+    
+     grantor |     grantee      | table_catalog | table_schema | table_name | privilege_type | is_grantable | with_hierarchy
+    ---------+------------------+---------------+--------------+------------+----------------+--------------+----------------
+     test    | test             | test_db       | public       | orders     | INSERT         | YES          | NO
+     test    | test             | test_db       | public       | orders     | SELECT         | YES          | YES
+     test    | test             | test_db       | public       | orders     | UPDATE         | YES          | NO
+     test    | test             | test_db       | public       | orders     | DELETE         | YES          | NO
+     test    | test             | test_db       | public       | orders     | TRUNCATE       | YES          | NO
+     test    | test             | test_db       | public       | orders     | REFERENCES     | YES          | NO
+     test    | test             | test_db       | public       | orders     | TRIGGER        | YES          | NO
+     test    | test_admin_user  | test_db       | public       | orders     | INSERT         | NO           | NO
+     test    | test_admin_user  | test_db       | public       | orders     | SELECT         | NO           | YES
+     test    | test_admin_user  | test_db       | public       | orders     | UPDATE         | NO           | NO
+     test    | test_admin_user  | test_db       | public       | orders     | DELETE         | NO           | NO
+     test    | test_admin_user  | test_db       | public       | orders     | TRUNCATE       | NO           | NO
+     test    | test_admin_user  | test_db       | public       | orders     | REFERENCES     | NO           | NO
+     test    | test_admin_user  | test_db       | public       | orders     | TRIGGER        | NO           | NO
+     test    | test_simple_user | test_db       | public       | orders     | INSERT         | NO           | NO
+     test    | test_simple_user | test_db       | public       | orders     | SELECT         | NO           | YES
+     test    | test_simple_user | test_db       | public       | orders     | UPDATE         | NO           | NO
+     test    | test_simple_user | test_db       | public       | orders     | DELETE         | NO           | NO
+     test    | test             | test_db       | public       | clients    | INSERT         | YES          | NO
+     test    | test             | test_db       | public       | clients    | SELECT         | YES          | YES
+     test    | test             | test_db       | public       | clients    | UPDATE         | YES          | NO
+     test    | test             | test_db       | public       | clients    | DELETE         | YES          | NO
+     test    | test             | test_db       | public       | clients    | TRUNCATE       | YES          | NO
+     test    | test             | test_db       | public       | clients    | REFERENCES     | YES          | NO
+     test    | test             | test_db       | public       | clients    | TRIGGER        | YES          | NO
+     test    | test_admin_user  | test_db       | public       | clients    | INSERT         | NO           | NO
+     test    | test_admin_user  | test_db       | public       | clients    | SELECT         | NO           | YES
+     test    | test_admin_user  | test_db       | public       | clients    | UPDATE         | NO           | NO
+     test    | test_admin_user  | test_db       | public       | clients    | DELETE         | NO           | NO
+     test    | test_admin_user  | test_db       | public       | clients    | TRUNCATE       | NO           | NO
+     test    | test_admin_user  | test_db       | public       | clients    | REFERENCES     | NO           | NO
+     test    | test_admin_user  | test_db       | public       | clients    | TRIGGER        | NO           | NO
+     test    | test_simple_user | test_db       | public       | clients    | INSERT         | NO           | NO
+     test    | test_simple_user | test_db       | public       | clients    | SELECT         | NO           | YES
+     test    | test_simple_user | test_db       | public       | clients    | UPDATE         | NO           | NO
+     test    | test_simple_user | test_db       | public       | clients    | DELETE         | NO           | NO
+    (36 rows)
+    
+
 
 ___
 **Задача 3**
@@ -309,6 +378,40 @@ ___
 
 **Прошу подсказать, какой вариант выборки в данном случае будет наиболее подходяий и верно ли я выбрал метод?**
 ___
+**Корректировка ДЗ 4**
+
+**SQL-запросы для выполнения данных операций**
+
+    test_db=# UPDATE clients SET заказ=3 WHERE id=1;
+    UPDATE 1
+    
+    test_db=# UPDATE clients SET заказ=4 WHERE id=2;
+    UPDATE 1
+    
+    test_db=# UPDATE clients SET заказ=5 WHERE id=3;
+    UPDATE 1
+
+    test_db=# SELECT * FROM clients;
+     id |       фамилия        | страна_проживания | заказ
+    ----+----------------------+-------------------+-------
+      5 | Ritchie Blackmore    | Russia            |
+      4 | Ронни Джеймс Дио     | Russia            |
+      1 | Иванов Иван Иванович | USA               |     3
+      2 | Петров Петр Петрович | Canada            |     4
+      3 | Иоганн Себастьян Бах | Japan             |     5
+
+**SQL-запрос для выдачи всех пользователей, которые сделали заказ**
+
+    test_db=# SELECT фамилия,страна_проживания,заказ FROM clients WHERE заказ IS NOT NULL;
+    
+           фамилия        | страна_проживания | заказ
+    ----------------------+-------------------+-------
+     Иванов Иван Иванович | USA               |     3
+     Петров Петр Петрович | Canada            |     4
+     Иоганн Себастьян Бах | Japan             |     5
+    (3 rows)
+
+___
 **Задача 5**
 
 Получите полную информацию по выполнению запроса выдачи всех пользователей из задачи 4 (используя директиву EXPLAIN).
@@ -333,6 +436,18 @@ cost - приблизительное время (0.00), которое было
 rows - ожидаемое число строк, которое должен быть выведен
 
 width - ожидаемый средний размер строк в байтах
+
+___
+**Корректировка ДЗ 5**
+
+Запрос будет выглядеть следующим образом:
+
+    test_db=# EXPLAIN SELECT фамилия,страна_проживания,заказ FROM clients WHERE заказ IS NOT NULL;
+                           QUERY PLAN
+    --------------------------------------------------------
+     Seq Scan on clients  (cost=0.00..1.05 rows=5 width=43)
+       Filter: ("заказ" IS NOT NULL)
+    (2 rows)
 ___
 **Задача 6**
 
