@@ -19,6 +19,29 @@ ___
 ___
 **Выполнение ДЗ:**
 
+**Поднятие postgresql используя докер:**
+
+    version: '3.1'
+    
+    volumes:
+         dbdata13:
+         backup:
+    
+    services:
+          pg_db:
+            image: postgres:13
+            restart: always
+            environment:
+              - POSTGRES_PASSWORD=test
+              - POSTGRES_USER=test
+            volumes:
+              - dbdata13:/var/lib/postgresql/data
+              - backup:/backup
+            ports:
+              - ${POSTGRES_PORT:-5432}:5432
+
+**Описание команды для psql:**
+
 - вывода списка БД
   
          \l список баз данных
@@ -58,12 +81,23 @@ ___
 ___
 **Выполнение ДЗ:**
 
+Восстановление бэкапа:
 
+    psql -U test < /backup/test_dump.sql.1
 
-psql -U test -d postgres < /backup/test_dump.sql.1
+Запуск ANALAYZE на таблицу:
 
-SELECT avg_width,attname FROM pg_stats WHERE tablename = 'orders';
+    test=# analyze orders;
+    ANALYZE
 
+Вычисление столбца таблицы с наибольшим средним значением размера элементов в байтах:
+
+    test=# select avg_width, attname FROM pg_stats WHERE tablename = 'orders' ORDER by attname DESC LIMIT 1;
+    
+     avg_width | attname
+    -----------+---------
+            16 | title
+    (1 row)
 ___
 **Задача 3**
 
@@ -76,9 +110,103 @@ ___
 ___
 **Выполнение ДЗ:**
 
+Создание новой таблицы, копии orders :
+
+    test=# create table new_orders (like orders including all);
+
+Создание таблицы orders_1 привязанной к new_orders по критерию price >499:
+
+      test=# create table orders_1 (like orders including all, CHECK (price > 499)) inherits ( new_orders);
+
+
+      test=# \d orders_1
+                                      Table "public.orders_1"
+     Column |         Type          | Collation | Nullable |              Default
+    --------+-----------------------+-----------+----------+------------------------------------
+     id     | integer               |           | not null | nextval('orders_id_seq'::regclass)
+     title  | character varying(80) |           | not null |
+     price  | integer               |           |          | 0
+    Indexes:
+        "orders_1_pkey" PRIMARY KEY, btree (id)
+    Check constraints:
+        "orders_1_price_check" CHECK (price > 499)
+    Inherits: new_orders
+  
+Создание таблицы orders_1 привязанной к new_orders по критерию price <=499:
+
+       test=# create table orders_2 (like orders including all, CHECK (price <= 499)) inherits ( new_orders);
+      
+       test=# \d orders_2
+                                      Table "public.orders_2"
+     Column |         Type          | Collation | Nullable |              Default
+    --------+-----------------------+-----------+----------+------------------------------------
+     id     | integer               |           | not null | nextval('orders_id_seq'::regclass)
+     title  | character varying(80) |           | not null |
+     price  | integer               |           |          | 0
+    Indexes:
+        "orders_2_pkey" PRIMARY KEY, btree (id)
+    Check constraints:
+        "orders_2_price_check" CHECK (price <= 499)
+    Inherits: new_orders
+
+Создание правил для таблицы new_orders:
+
+    test=# CREATE RULE new_orders_insert_to_2 AS ON INSERT TO new_orders WHERE (price <=499) DO INSTEAD INSERT INTO orders_2 VALUES (NEW.*);
+    CREATE RULE
+    test=# CREATE RULE new_orders_insert_to_1 AS ON INSERT TO new_orders WHERE (price > 499) DO INSTEAD INSERT INTO orders_1 VALUES (NEW.*);
+    CREATE RULE
+
+Копирование содержимого таблицы orders в new_orders:
+
+    test=# INSERT INTO new_orders (id, price, title) SELECT id, price, title from orders;
+    INSERT 0 0
+
+Смотрим таблицы orders_1 и orders_2:
+
+    test=# SELECT * FROM new_orders;
+     id |        title         | price
+    ----+----------------------+-------
+      1 | War and peace        |   100
+      3 | Adventure psql time  |   300
+      4 | Server gravity falls |   300
+      5 | Log gossips          |   123
+      7 | Me and my bash-pet   |   499
+      2 | My little database   |   500
+      6 | WAL never lies       |   900
+      8 | Dbiezdmin            |   501
+    (8 rows)
+    
+    test=# SELECT * FROM orders_2;
+     id |        title         | price
+    ----+----------------------+-------
+      1 | War and peace        |   100
+      3 | Adventure psql time  |   300
+      4 | Server gravity falls |   300
+      5 | Log gossips          |   123
+      7 | Me and my bash-pet   |   499
+    (5 rows)
+    
+    test=# SELECT * FROM orders_1;
+     id |       title        | price
+    ----+--------------------+-------
+      2 | My little database |   500
+      6 | WAL never lies     |   900
+      8 | Dbiezdmin          |   501
+    (3 rows)
+
+**Можно ли было изначально исключить "ручное" разбиение при проектировании таблицы orders?**
+
+Да, можно, если бы изначально можно было бы создать наследованные таблицы по N-м ограничениям (check) и задать правила распределения данных между таблицами и партициями.
 
 ___
-Задача 4
+**P/S. 1. В сети Интернет видел разные варианты решения такой задачки, и с применением триггеров и с применением наследования (сделал выше) и с применением  декларативного секционирования.
+Какой вариант наиболее предпочтительный в реальной среде?**
+
+**2. Получается, что новая(копия order) таблица (new_order) она также существует, помимо двух наследованных order_1 и order_2 и в итоге получаем больший объём занятого место. То есть получается, мы выигрываем в скорости работы с таблицей, но проигрываем в занимаемом месте?**
+
+**3. Дополнительно прошу проверить мой алгоритм действий выше, всё ли выполнил верно или можно было разделить таблицу из задания намного проще?**
+___
+**Задача 4**
 
 Используя утилиту `pg_dump` создайте бекап БД `test_database`.
 
@@ -86,3 +214,18 @@ ___
 ___
 **Выполнение ДЗ:**
 
+Создан файл бэкапа: 
+
+    pg_dump -U test -d test > postgre13.dump
+
+Доработка столбца title:
+
+    Добавить UNIQUE при создании таблицы на title
+    
+    CREATE TABLE public.orders (
+        id integer NOT NULL,
+        title character varying(80) UNIQUE,
+        price integer DEFAULT 0
+    );
+
+**P/S. Если что-то ещё нужно сделать, то прошу помочь, так как пока более ничего на ум не приходит по добавлению.**
