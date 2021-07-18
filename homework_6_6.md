@@ -13,6 +13,10 @@ ___
 ___
 **Выполнение ДЗ:**
 
+https://docs.mongodb.com/manual/tutorial/terminate-running-operations/
+
+https://docs.mongodb.com/manual/tutorial/manage-the-database-profiler/#DatabaseProfiler-OptimizingQueryPerformance
+
 ___
 **Задача 2**
 
@@ -46,6 +50,8 @@ ___
 ___
 **Выполнение ДЗ:**
 
+https://dev.mysql.com/doc/refman/8.0/en/error-lost-connection.html
+
 ___
 **Задача 4**
 
@@ -64,3 +70,10 @@ ___
 ___
 **Выполнение ДЗ:**
 
+https://habr.com/ru/company/southbridge/blog/464245/
+https://www.percona.com/blog/2020/06/05/10-common-postgresql-errors/
+
+Пусть вас не пугает «киллер» в OOM-Killer. 
+В данном случае киллер будет спасителем вашей системы. Он «убивает» самые нехорошие процессы и спасает систему от аварийного завершения. 
+Чтобы не приходилось использовать OOM-Killer для завершения PostgreSQL, установите для vm.overcommit_memory значение 2. 
+Это не гарантирует, что OOM-Killer не придется вмешиваться, но снизит вероятность принудительного завершения процесса PostgreSQL.
