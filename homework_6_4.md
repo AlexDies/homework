@@ -227,5 +227,89 @@ ___
         title character varying(80) UNIQUE,
         price integer DEFAULT 0
     );
-
 **P/S. Если что-то ещё нужно сделать, то прошу помочь, так как пока более ничего на ум не приходит по добавлению.**
+___
+**Доработка ДЗ 3:**
+
+1.Создание новой таблицы с партицией по диапазону:
+   
+     test=# CREATE table new_orders (
+          id integer NOT NULL,
+          title character varying(80) NOT NULL,
+          price integer DEFAULT 0
+        ) partition by range ( price);
+        CREATE TABLE
+   
+2.Создание партиции orders_1 со значением price >499:
+
+    test=# create table orders_1 partition of new_orders for values from (500) to (2147483647);
+    CREATE TABLE
+
+3.Создание партиции orders_2 со значением price <=499:
+
+    test=# create table orders_2 partition of new_orders for values from (0) to (500);
+    CREATE TABLE
+
+4.Проверка таблицы new_orders:
+
+    test=# \d+ new_orders
+                                      Partitioned table "public.new_orders"
+     Column |         Type          | Collation | Nullable | Default | Storage  | Stats target | Description
+    --------+-----------------------+-----------+----------+---------+----------+--------------+-------------
+     id     | integer               |           | not null |         | plain    |              |
+     title  | character varying(80) |           | not null |         | extended |              |
+     price  | integer               |           |          | 0       | plain    |              |
+    Partition key: RANGE (price)
+    Partitions: orders_1 FOR VALUES FROM (500) TO (2147483647),
+                orders_2 FOR VALUES FROM (0) TO (500)
+
+5.Копирование информации из таблицы orders в таблицу new_orders:
+
+    test=# INSERT into new_orders (id, price, title) select id, price, title from orders;
+    INSERT 0 9
+6.Проверка разделения значений по условиям:
+
+    test=# select * FROM orders_1;
+     id |       title        | price
+    ----+--------------------+-------
+      2 | My little database |   500
+      6 | WAL never lies     |   900
+      8 | Dbiezdmin          |   501
+    (3 rows)
+
+    test=# select * FROM orders_2;
+     id |        title         | price
+    ----+----------------------+-------
+      1 | War and peace        |   100
+      3 | Adventure psql time  |   300
+      4 | Server gravity falls |   300
+      5 | Log gossips          |   123
+      7 | Me and my bash-pet   |   499
+      9 | test                 |   480
+    (6 rows)
+
+    test=# select * FROM orders;
+     id |        title         | price
+    ----+----------------------+-------
+      1 | War and peace        |   100
+      2 | My little database   |   500
+      3 | Adventure psql time  |   300
+      4 | Server gravity falls |   300
+      5 | Log gossips          |   123
+      6 | WAL never lies       |   900
+      7 | Me and my bash-pet   |   499
+      8 | Dbiezdmin            |   501
+      9 | test                 |   480
+    (9 rows)
+
+В итоге всё выполняется и работает.
+
+**P/S. Возник вопрос при создании таблицы с партацией.** 
+
+При полноценном копировании таблицы orders ( `CREATE table new_order (like orders including all) PARTITION BY RANGE ( price);`) или отдельном вводе primary key для столбца id (`alter table new_orders add constraint new_orders_pkey primary key (id);`) 
+выдает ошибку формате:
+
+    ERROR:  unique constraint on partitioned table must include all partitioning columns
+    DETAIL:  PRIMARY KEY constraint on table "new_orders" lacks column "price" which is part of the partition key.
+
+Получается, что при партицироовании таблицы, уникальные ключи primary_key перенести нельзя? В моем случае таблица orders (исходная) и таблица new_orders отличаются только этим ключом.
