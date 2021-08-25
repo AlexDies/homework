@@ -13,7 +13,69 @@ ___
 ___
 **Выполнение ДЗ:**
 
+1. Регистрация
 
+2. Добавление аккаунта github с новым репозиторием
+
+3. Регистрация репозитория в app.terraform.io
+
+4. Создание плана
+
+
+
+Вопросы:
+
+1. Как добавить несколько воркспейсов, аналогично `terraform workspace new stage` и `terraform workspace new prod`?
+
+Использовал файл `main.tf` из предыдущего ДЗ. Там использовалось несколько воркспейсов и при запуске плана в terraform cloud появляется ошибка:
+
+      Terraform v1.0.5
+      on linux_amd64
+      Configuring remote state backend...
+      Initializing Terraform configuration...
+      ╷
+      │ Error: Invalid index
+      │ 
+      │   on main.tf line 45, in resource "aws_instance" "test":
+      │   45:   instance_type = local.web_instance_type_map[terraform.workspace]
+      │     ├────────────────
+      │     │ local.web_instance_type_map is object with 2 attributes
+      │     │ terraform.workspace is "default"
+      │ 
+      │ The given key does not identify an element in this collection value.
+      ╵
+      ╷
+      │ Error: Invalid index
+      │ 
+      │   on main.tf line 46, in resource "aws_instance" "test":
+      │   46:   count = local.web_instance_count_map[terraform.workspace]
+      │     ├────────────────
+      │     │ local.web_instance_count_map is object with 2 attributes
+      │     │ terraform.workspace is "default"
+      │ 
+      │ The given key does not identify an element in this collection value.
+
+То есть в Cloud используется по умолчанию default воркспейс. Соответственно, данный конфиг не запустится пока не пропишешь эти воркспейсы.
+
+Или используя Cloud тут подход другой будет? Если да, то как правильно решить такую задачу? (допустим, эти файлы конфигурации были использованы локально, а сейчас мы переходим на terraform cloud и они не запускаются)
+
+2. Почему не добавляется файл стейта в S3? В конфигурационном файле следующий блок присутствует:
+         
+              terraform {
+               backend "s3" {
+                 bucket         = "terraform-test-netology"
+                 encrypt        = true
+                 key            = "netology/terraform.tfstate"
+                 region         = "eu-west-2"
+                 dynamodb_table = "terraform-locks"
+               }
+              }
+
+Или Terraform Cloud хранит стейт файлы со своей стороны? Если так, то получается добавлять бэкэнд в S3 или иное место смысла нет в файл `main.tf`?
+
+Сам инстанс создается успешно
+
+3.
 ___
 **Задача 2. Написать серверный конфиг для атлантиса.**
 
