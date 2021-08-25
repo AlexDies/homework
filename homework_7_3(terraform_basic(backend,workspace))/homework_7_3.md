@@ -142,7 +142,7 @@ ___
 1. Первично удалил файл terraform.tfstate в локальной папке (решил сделать с чистого листа скопировав только конфигурацию из предыдущего ДЗ) и данный файл не появлялся пока не сделал `terraform apply`.
 Так и должно быть? Не помогал ни `init`, ни `plan`.
    
-2. После добавления блока с backend на S3 в п.4 - процесс `init` прошел успешно, а вот на `plan` была ошибка формата:
+2. В процессе первоначального выполнения ДЗ, после добавления блока с backend S3 в `main.tf` - процесс `init` прошел успешно, а вот на `plan` была ошибка формата:
 
         -----------------------------------------------------
         2021-08-25T11:41:45.391Z [DEBUG] [aws-sdk-go] {"__type":"com.amazonaws.dynamodb.v20120810#ResourceNotFoundException","message":"Requested resource not found"}
@@ -161,9 +161,8 @@ ___
         │ again. For most commands, you can disable locking with the "-lock=false"
 
 Судя по ней - ресурс для DynamoDB не был найден (я его изначально не создавал). Получается, что помимо S3 бакета, вручную ещё нужно создать и таблицу DynamoDB? 
-Так как автоматически она не создается. Или я что-то упустил?
+Так как автоматически она не создается. После того, как создал вручную - всё прошло отлично, результат выше.
 
-После того, как создал вручную - всё прошло отлично.
 ___
 **Задача 2. Инициализируем проект и создаем воркспейсы.**
 
@@ -187,6 +186,552 @@ ___
 ___
 **Выполнение ДЗ:**
 
+1. Выполнение `terraform init` было сделано в задании выше №1. Запись стейта появилась в S3, а также появилась запись в таблице DynamoDB
+
+2. Создание ворквпейсов `stage` и `prod`:
+
+Воркспейс `stage`:
+
+        vagrant@vagrant:~/terraform/iac7_3$ terraform workspace new stage
+        Created and switched to workspace "stage"!
+        
+        You're now on a new, empty workspace. Workspaces isolate their state,
+        so if you run "terraform plan" Terraform will not see any existing state
+        for this configuration.
+
+Воркспейс `prod`:
+
+        vagrant@vagrant:~/terraform/iac7_3$ terraform workspace new prod
+        Created and switched to workspace "prod"!
+        
+        You're now on a new, empty workspace. Workspaces isolate their state,
+        so if you run "terraform plan" Terraform will not see any existing state
+        for this configuration.
+
+3. Добавление зависимости инстанса от воркспейса в `main.tf`:
+
+Для воркспейса `stage` - `t2.micro`
+
+Для воркспейса `prod `- `t3.micro`
+
+        locals {
+         web_instance_type_map = {
+           stage = "t2.micro"
+           prod = "t3.micro"
+         }
+        }
+        
+        resource "aws_instance" "test" {
+          ami           = data.aws_ami.ubuntu.id
+          instance_type = local.web_instance_type_map[terraform.workspace]
+        
+          tags = {
+            Name = "testubuntu"
+          }
+        }
+
+4. Добавляем значение `count` в `main.tf`:
+
+Для значения `stage` - 1 инстанс
+
+Для значения `prod` - 2 инстанса
+
+        locals {
+         web_instance_type_map = {
+           stage = "t2.micro"
+           prod = "t3.micro"
+         }
+         web_instance_count_map = {
+           stage = 1
+           prod = 2
+         }
+        }
+        
+        resource "aws_instance" "test" {
+          ami           = data.aws_ami.ubuntu.id
+          instance_type = local.web_instance_type_map[terraform.workspace]
+          count = local.web_instance_count_map[terraform.workspace]
+        
+          tags = {
+            Name = "testubuntu"
+          }
+        }
+
+Также потребовалось внести изменения в файл `output.tf` из ДЗ предыдущего урока, так как значения output стали зависить от количества (count) инстансов:
+
+    output "private_ip" {
+      value = aws_instance.test[0].private_ip
+    }
+    
+    output "subnet_id" {
+      value = aws_instance.test[0].subnet_id
+    }
+
+5. Создание нового инстанса с указанием количества через `for_each`:
+
+Добавим следующие блоки в файл `main.tf`
+
+        locals {
+         instances = {
+           "t3.micro" = data.aws_ami.ubuntu.id
+           "t2.micro" = data.aws_ami.ubuntu.id
+         }
+        }
+        
+        
+        resource "aws_instance" "for_each" {
+         for_each = local.instances
+         ami = each.value
+         instance_type = each.key
+        }
+
+Тем самым будут созданы 2 инстанса с наименованием for_each с `t3.micro` и` t2.micro`.
+
+В `terraform plan` для `prod` на текущем этапе будет 4 инстанса - 2 через `count` с привязкой к переменной `prod` (t3.micro) и 2 с использованием `for_each` (`t3.micro` и` t2.micro`).
+
+В `terraform plan` для `stage` на текущем этапе будет 3 инстанса - 1 через `count` с привязкой к переменной `stage` (t2.micro) и 2 с использованием `for_each` (`t3.micro` и` t2.micro`).
+
+6. Добавим жизненный цикл ресурса:
+
+Используем `create_before_destroy` в ресурсе `aws_instance for_each`:
+
+        resource "aws_instance" "for_each" {
+         for_each = local.instances
+         ami = each.value
+         instance_type = each.key
+        
+         lifecycle {
+          create_before_destroy = true
+         }
+        }
 
 
+7. Вывод команды `terraform workspace list`:
 
+        vagrant@vagrant:~/terraform/iac7_3$ terraform workspace list
+          default
+        * prod
+          stage
+
+8. Вывод команды `terraform plan` для воркспейса `prod`:
+
+        vagrant@vagrant:~/terraform/iac7_3$ terraform plan
+        
+        Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with
+        the following symbols:
+          + create
+        
+        Terraform will perform the following actions:
+        
+          # aws_instance.for_each["t2.micro"] will be created
+          + resource "aws_instance" "for_each" {
+              + ami                                  = "ami-0d1bf29ea93678225"
+              + arn                                  = (known after apply)
+              + associate_public_ip_address          = (known after apply)
+              + availability_zone                    = (known after apply)
+              + cpu_core_count                       = (known after apply)
+              + cpu_threads_per_core                 = (known after apply)
+              + disable_api_termination              = (known after apply)
+              + ebs_optimized                        = (known after apply)
+              + get_password_data                    = false
+              + host_id                              = (known after apply)
+              + id                                   = (known after apply)
+              + instance_initiated_shutdown_behavior = (known after apply)
+              + instance_state                       = (known after apply)
+              + instance_type                        = "t2.micro"
+              + ipv6_address_count                   = (known after apply)
+              + ipv6_addresses                       = (known after apply)
+              + key_name                             = (known after apply)
+              + monitoring                           = (known after apply)
+              + outpost_arn                          = (known after apply)
+              + password_data                        = (known after apply)
+              + placement_group                      = (known after apply)
+              + primary_network_interface_id         = (known after apply)
+              + private_dns                          = (known after apply)
+              + private_ip                           = (known after apply)
+              + public_dns                           = (known after apply)
+              + public_ip                            = (known after apply)
+              + secondary_private_ips                = (known after apply)
+              + security_groups                      = (known after apply)
+              + source_dest_check                    = true
+              + subnet_id                            = (known after apply)
+              + tags_all                             = (known after apply)
+              + tenancy                              = (known after apply)
+              + user_data                            = (known after apply)
+              + user_data_base64                     = (known after apply)
+              + vpc_security_group_ids               = (known after apply)
+        
+              + capacity_reservation_specification {
+                  + capacity_reservation_preference = (known after apply)
+        
+                  + capacity_reservation_target {
+                      + capacity_reservation_id = (known after apply)
+                    }
+                }
+        
+              + ebs_block_device {
+                  + delete_on_termination = (known after apply)
+                  + device_name           = (known after apply)
+                  + encrypted             = (known after apply)
+                  + iops                  = (known after apply)
+                  + kms_key_id            = (known after apply)
+                  + snapshot_id           = (known after apply)
+                  + tags                  = (known after apply)
+                  + throughput            = (known after apply)
+                  + volume_id             = (known after apply)
+                  + volume_size           = (known after apply)
+                  + volume_type           = (known after apply)
+                }
+        
+              + enclave_options {
+                  + enabled = (known after apply)
+                }
+        
+              + ephemeral_block_device {
+                  + device_name  = (known after apply)
+                  + no_device    = (known after apply)
+                  + virtual_name = (known after apply)
+                }
+        
+              + metadata_options {
+                  + http_endpoint               = (known after apply)
+                  + http_put_response_hop_limit = (known after apply)
+                  + http_tokens                 = (known after apply)
+                }
+        
+              + network_interface {
+                  + delete_on_termination = (known after apply)
+                  + device_index          = (known after apply)
+                  + network_interface_id  = (known after apply)
+                }
+        
+              + root_block_device {
+                  + delete_on_termination = (known after apply)
+                  + device_name           = (known after apply)
+                  + encrypted             = (known after apply)
+                  + iops                  = (known after apply)
+                  + kms_key_id            = (known after apply)
+                  + tags                  = (known after apply)
+                  + throughput            = (known after apply)
+                  + volume_id             = (known after apply)
+                  + volume_size           = (known after apply)
+                  + volume_type           = (known after apply)
+                }
+            }
+        
+          # aws_instance.for_each["t3.micro"] will be created
+          + resource "aws_instance" "for_each" {
+              + ami                                  = "ami-0d1bf29ea93678225"
+              + arn                                  = (known after apply)
+              + associate_public_ip_address          = (known after apply)
+              + availability_zone                    = (known after apply)
+              + cpu_core_count                       = (known after apply)
+              + cpu_threads_per_core                 = (known after apply)
+              + disable_api_termination              = (known after apply)
+              + ebs_optimized                        = (known after apply)
+              + get_password_data                    = false
+              + host_id                              = (known after apply)
+              + id                                   = (known after apply)
+              + instance_initiated_shutdown_behavior = (known after apply)
+              + instance_state                       = (known after apply)
+              + instance_type                        = "t3.micro"
+              + ipv6_address_count                   = (known after apply)
+              + ipv6_addresses                       = (known after apply)
+              + key_name                             = (known after apply)
+              + monitoring                           = (known after apply)
+              + outpost_arn                          = (known after apply)
+              + password_data                        = (known after apply)
+              + placement_group                      = (known after apply)
+              + primary_network_interface_id         = (known after apply)
+              + private_dns                          = (known after apply)
+              + private_ip                           = (known after apply)
+              + public_dns                           = (known after apply)
+              + public_ip                            = (known after apply)
+              + secondary_private_ips                = (known after apply)
+              + security_groups                      = (known after apply)
+              + source_dest_check                    = true
+              + subnet_id                            = (known after apply)
+              + tags_all                             = (known after apply)
+              + tenancy                              = (known after apply)
+              + user_data                            = (known after apply)
+              + user_data_base64                     = (known after apply)
+              + vpc_security_group_ids               = (known after apply)
+        
+              + capacity_reservation_specification {
+                  + capacity_reservation_preference = (known after apply)
+        
+                  + capacity_reservation_target {
+                      + capacity_reservation_id = (known after apply)
+                    }
+                }
+        
+              + ebs_block_device {
+                  + delete_on_termination = (known after apply)
+                  + device_name           = (known after apply)
+                  + encrypted             = (known after apply)
+                  + iops                  = (known after apply)
+                  + kms_key_id            = (known after apply)
+                  + snapshot_id           = (known after apply)
+                  + tags                  = (known after apply)
+                  + throughput            = (known after apply)
+                  + volume_id             = (known after apply)
+                  + volume_size           = (known after apply)
+                  + volume_type           = (known after apply)
+                }
+        
+              + enclave_options {
+                  + enabled = (known after apply)
+                }
+        
+              + ephemeral_block_device {
+                  + device_name  = (known after apply)
+                  + no_device    = (known after apply)
+                  + virtual_name = (known after apply)
+                }
+        
+              + metadata_options {
+                  + http_endpoint               = (known after apply)
+                  + http_put_response_hop_limit = (known after apply)
+                  + http_tokens                 = (known after apply)
+                }
+        
+              + network_interface {
+                  + delete_on_termination = (known after apply)
+                  + device_index          = (known after apply)
+                  + network_interface_id  = (known after apply)
+                }
+        
+              + root_block_device {
+                  + delete_on_termination = (known after apply)
+                  + device_name           = (known after apply)
+                  + encrypted             = (known after apply)
+                  + iops                  = (known after apply)
+                  + kms_key_id            = (known after apply)
+                  + tags                  = (known after apply)
+                  + throughput            = (known after apply)
+                  + volume_id             = (known after apply)
+                  + volume_size           = (known after apply)
+                  + volume_type           = (known after apply)
+                }
+            }
+        
+          # aws_instance.test[0] will be created
+          + resource "aws_instance" "test" {
+              + ami                                  = "ami-0d1bf29ea93678225"
+              + arn                                  = (known after apply)
+              + associate_public_ip_address          = (known after apply)
+              + availability_zone                    = (known after apply)
+              + cpu_core_count                       = (known after apply)
+              + cpu_threads_per_core                 = (known after apply)
+              + disable_api_termination              = (known after apply)
+              + ebs_optimized                        = (known after apply)
+              + get_password_data                    = false
+              + host_id                              = (known after apply)
+              + id                                   = (known after apply)
+              + instance_initiated_shutdown_behavior = (known after apply)
+              + instance_state                       = (known after apply)
+              + instance_type                        = "t3.micro"
+              + ipv6_address_count                   = (known after apply)
+              + ipv6_addresses                       = (known after apply)
+              + key_name                             = (known after apply)
+              + monitoring                           = (known after apply)
+              + outpost_arn                          = (known after apply)
+              + password_data                        = (known after apply)
+              + placement_group                      = (known after apply)
+              + primary_network_interface_id         = (known after apply)
+              + private_dns                          = (known after apply)
+              + private_ip                           = (known after apply)
+              + public_dns                           = (known after apply)
+              + public_ip                            = (known after apply)
+              + secondary_private_ips                = (known after apply)
+              + security_groups                      = (known after apply)
+              + source_dest_check                    = true
+              + subnet_id                            = (known after apply)
+              + tags                                 = {
+                  + "Name" = "testubuntu"
+                }
+              + tags_all                             = {
+                  + "Name" = "testubuntu"
+                }
+              + tenancy                              = (known after apply)
+              + user_data                            = (known after apply)
+              + user_data_base64                     = (known after apply)
+              + vpc_security_group_ids               = (known after apply)
+        
+              + capacity_reservation_specification {
+                  + capacity_reservation_preference = (known after apply)
+        
+                  + capacity_reservation_target {
+                      + capacity_reservation_id = (known after apply)
+                    }
+                }
+        
+              + ebs_block_device {
+                  + delete_on_termination = (known after apply)
+                  + device_name           = (known after apply)
+                  + encrypted             = (known after apply)
+                  + iops                  = (known after apply)
+                  + kms_key_id            = (known after apply)
+                  + snapshot_id           = (known after apply)
+                  + tags                  = (known after apply)
+                  + throughput            = (known after apply)
+                  + volume_id             = (known after apply)
+                  + volume_size           = (known after apply)
+                  + volume_type           = (known after apply)
+                }
+        
+              + enclave_options {
+                  + enabled = (known after apply)
+                }
+        
+              + ephemeral_block_device {
+                  + device_name  = (known after apply)
+                  + no_device    = (known after apply)
+                  + virtual_name = (known after apply)
+                }
+        
+              + metadata_options {
+                  + http_endpoint               = (known after apply)
+                  + http_put_response_hop_limit = (known after apply)
+                  + http_tokens                 = (known after apply)
+                }
+        
+              + network_interface {
+                  + delete_on_termination = (known after apply)
+                  + device_index          = (known after apply)
+                  + network_interface_id  = (known after apply)
+                }
+        
+              + root_block_device {
+                  + delete_on_termination = (known after apply)
+                  + device_name           = (known after apply)
+                  + encrypted             = (known after apply)
+                  + iops                  = (known after apply)
+                  + kms_key_id            = (known after apply)
+                  + tags                  = (known after apply)
+                  + throughput            = (known after apply)
+                  + volume_id             = (known after apply)
+                  + volume_size           = (known after apply)
+                  + volume_type           = (known after apply)
+                }
+            }
+        
+          # aws_instance.test[1] will be created
+          + resource "aws_instance" "test" {
+              + ami                                  = "ami-0d1bf29ea93678225"
+              + arn                                  = (known after apply)
+              + associate_public_ip_address          = (known after apply)
+              + availability_zone                    = (known after apply)
+              + cpu_core_count                       = (known after apply)
+              + cpu_threads_per_core                 = (known after apply)
+              + disable_api_termination              = (known after apply)
+              + ebs_optimized                        = (known after apply)
+              + get_password_data                    = false
+              + host_id                              = (known after apply)
+              + id                                   = (known after apply)
+              + instance_initiated_shutdown_behavior = (known after apply)
+              + instance_state                       = (known after apply)
+              + instance_type                        = "t3.micro"
+              + ipv6_address_count                   = (known after apply)
+              + ipv6_addresses                       = (known after apply)
+              + key_name                             = (known after apply)
+              + monitoring                           = (known after apply)
+              + outpost_arn                          = (known after apply)
+              + password_data                        = (known after apply)
+              + placement_group                      = (known after apply)
+              + primary_network_interface_id         = (known after apply)
+              + private_dns                          = (known after apply)
+              + private_ip                           = (known after apply)
+              + public_dns                           = (known after apply)
+              + public_ip                            = (known after apply)
+              + secondary_private_ips                = (known after apply)
+              + security_groups                      = (known after apply)
+              + source_dest_check                    = true
+              + subnet_id                            = (known after apply)
+              + tags                                 = {
+                  + "Name" = "testubuntu"
+                }
+              + tags_all                             = {
+                  + "Name" = "testubuntu"
+                }
+              + tenancy                              = (known after apply)
+              + user_data                            = (known after apply)
+              + user_data_base64                     = (known after apply)
+              + vpc_security_group_ids               = (known after apply)
+        
+              + capacity_reservation_specification {
+                  + capacity_reservation_preference = (known after apply)
+        
+                  + capacity_reservation_target {
+                      + capacity_reservation_id = (known after apply)
+                    }
+                }
+        
+              + ebs_block_device {
+                  + delete_on_termination = (known after apply)
+                  + device_name           = (known after apply)
+                  + encrypted             = (known after apply)
+                  + iops                  = (known after apply)
+                  + kms_key_id            = (known after apply)
+                  + snapshot_id           = (known after apply)
+                  + tags                  = (known after apply)
+                  + throughput            = (known after apply)
+                  + volume_id             = (known after apply)
+                  + volume_size           = (known after apply)
+                  + volume_type           = (known after apply)
+                }
+        
+              + enclave_options {
+                  + enabled = (known after apply)
+                }
+        
+              + ephemeral_block_device {
+                  + device_name  = (known after apply)
+                  + no_device    = (known after apply)
+                  + virtual_name = (known after apply)
+                }
+        
+              + metadata_options {
+                  + http_endpoint               = (known after apply)
+                  + http_put_response_hop_limit = (known after apply)
+                  + http_tokens                 = (known after apply)
+                }
+        
+              + network_interface {
+                  + delete_on_termination = (known after apply)
+                  + device_index          = (known after apply)
+                  + network_interface_id  = (known after apply)
+                }
+        
+              + root_block_device {
+                  + delete_on_termination = (known after apply)
+                  + device_name           = (known after apply)
+                  + encrypted             = (known after apply)
+                  + iops                  = (known after apply)
+                  + kms_key_id            = (known after apply)
+                  + tags                  = (known after apply)
+                  + throughput            = (known after apply)
+                  + volume_id             = (known after apply)
+                  + volume_size           = (known after apply)
+                  + volume_type           = (known after apply)
+                }
+            }
+        
+        Plan: 4 to add, 0 to change, 0 to destroy.
+        
+        Changes to Outputs:
+          + account_id  = "692810338857"
+          + caller_arn  = "arn:aws:iam::692810338857:user/awsuser"
+          + caller_user = "AIDA2CTVW2IU67CF67QBP"
+          + private_ip  = (known after apply)
+          + region_name = "eu-west-2"
+          + subnet_id   = (known after apply)
+        
+        ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+        
+        Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if
+        you run "terraform apply" now.
+        Releasing state lock. This may take a few moments...
+
+**P/S. Возник вопрос касательно отображения жизненного цикла.** 
+При подаче команды terraform plan нигде не нашел отображение параметра` create_before_destroy`. Параметры жизненного цикла не отображаются в plan?
