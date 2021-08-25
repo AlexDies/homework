@@ -18,6 +18,15 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
+terraform {
+ backend "s3" {
+   bucket         = "terraform-test-netology"
+   encrypt        = true
+   key            = "terraform.tfstate"
+   region         = "eu-west-2"
+   dynamodb_table = "terraform-locks"
+ }
+}
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.ubuntu.id
@@ -25,10 +34,6 @@ resource "aws_instance" "test" {
 
   tags = {
     Name = "testubuntu"
-  }
-
-   credit_specification {
-     cpu_credits = "unlimited"
   }
 }
 
