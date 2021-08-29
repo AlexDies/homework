@@ -1,0 +1,18 @@
+repos:
+  - id: github.com/AlexDies/homework
+    apply_requirements: [approved]
+    workflow: default
+    allowed_overrides: [workflow]
+
+workflows:
+  default:
+    plan:
+      steps:
+        - init:
+            extra_args: ["-lock=false"]
+        - plan:
+            extra_args: ["-lock=false"]
+    apply:
+      steps:
+        - apply:
+            extra_args: ["-lock=false"]

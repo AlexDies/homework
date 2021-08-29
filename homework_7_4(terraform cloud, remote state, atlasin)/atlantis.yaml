@@ -1,0 +1,27 @@
+version: 3
+projects:
+- dir: .
+  workspace: stage
+  terraform_version: v0.13.0
+  workflow: default
+  autoplan:
+    when_modified: ["*.tf*"]
+- dir: .
+  workspace: prod
+  terraform_version: v0.13.0
+  workflow: default
+  autoplan:
+    when_modified: ["*.tf*"]
+
+workflows:
+  default:
+    plan:
+      steps:
+        - init:
+            extra_args: ["-lock=false"]
+        - plan:
+            extra_args: ["-lock=false"]
+    apply:
+      steps:
+        - apply:
+            extra_args: ["-lock=false"]
