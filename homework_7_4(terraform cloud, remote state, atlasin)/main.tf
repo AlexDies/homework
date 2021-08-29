@@ -18,22 +18,20 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"]
 }
 
-locals {
-  name              = "example-ec2-module"
+module "ec2_instance" {
+  source  = "terraform-aws-modules/ec2-instance/aws"
+  version = "~> 3.0"
+
+  name = "test"
+
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t3.micro"
+  monitoring             = true
+
   tags = {
-    Name       = "moduletest"
+    Terraform   = "true"
+    Environment = "dev"
   }
-}
-
-module "ec2" {
-  source = "../../"
-
-  name = local.name
-
-  ami                         = data.aws_ami.ubuntu.id
-  instance_type               = "t3.micro"
-
-  tags = local.tags
 }
 
 data "aws_caller_identity" "current" {}

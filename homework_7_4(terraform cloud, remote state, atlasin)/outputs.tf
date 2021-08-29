@@ -13,11 +13,3 @@ output "caller_user" {
 output "region_name" {
   value = data.aws_region.current.name
 }
-
-output "private_ip" {
-  value = aws_instance.test.private_ip
-}
-
-output "subnet_id" {
-  value = aws_instance.test.subnet_id
-}

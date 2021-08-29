@@ -230,16 +230,66 @@ ___
 2. Изучить как устроен модуль. Будете ли в проекте использоваться этот модуль или непосредственно ресурс `aws_instance` без помощи модуля?
    
 При изучении модуля видно, что у модуля есть несколько возможностей:
-1) Создать один инстанс EC2 (Single EC2 Instance)
-2) Создать 3 инстанса EC2 (Multiple EC2 Instance)
-3) Создать спот-инстанс EC2 (Spot EC2 Instance)
 
-Но в целом, ресурс в модуле только 1, всё остальное это "дополнения"
+_1)Создать один инстанс EC2 (Single EC2 Instance)_
+
+_2)Создать 3 инстанса EC2 (Multiple EC2 Instance)_
+
+_3)Создать спот-инстанс EC2 (Spot EC2 Instance)_
+
+Но в целом, насколько я понял, ресурс в модуле только 1, всё остальное это "дополнения"
 
 В итоге, если речь идёт об одном инстансе EC2, то проще будет использовать непосредственно отдельный ресурс `aws_instance` без помощи модуля, так как ввод обязательных параметров всё равно необходим, 
 что в целом почти равноценно и ручному созданию ресурса, но с конечными, нужными параметрами.
 
 Данный модуль думаю, можно использовать, если необходимо получить множество разных output-значений из данного модуля. Тем самым используя его как "готовый шаблон" с нужными характеристиками.
 
+**P/S. Какие ещё есть моменты, когда выгодно использовать модули для данного инстанса EC2, а не писать его вручную?**
+
 3. В рамках предпоследнего задания был создан ec2 при помощи ресурса `aws_instance`. Создайте аналогичный инстанс при помощи найденного модуля.
 
+Вместо блока ресурс, добавлен блок модуля EC2:
+
+      module "ec2_instance" {
+        source  = "terraform-aws-modules/ec2-instance/aws"
+        version = "~> 3.0"
+      
+        name = "test"
+      
+        ami                    = data.aws_ami.ubuntu.id
+        instance_type          = "t3.micro"
+        monitoring             = true
+      
+        tags = {
+          Terraform   = "true"
+          Environment = "dev"
+        }
+      }
+
+Планирование и запуск инстанса проходит успешно:
+      
+      vagrant@vagrant:~/terraform/iac7_4$ terraform apply
+      
+      Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following
+      symbols:
+        + create
+      
+      Terraform will perform the following actions:
+      
+        # module.ec2_instance.aws_instance.this[0] will be created
+      module.ec2_instance.aws_instance.this[0]: Creating...
+      module.ec2_instance.aws_instance.this[0]: Still creating... [10s elapsed]
+      module.ec2_instance.aws_instance.this[0]: Creation complete after 15s [id=i-0dd9cc1a6067c5004]
+      
+      Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+      
+      Outputs:
+      
+      account_id = "692810338857"
+      caller_arn = "arn:aws:iam::692810338857:user/awsuser"
+      caller_user = "AIDA2CTVW2IU67CF67QBP"
+      region_name = "eu-west-2"
+
+![img_5.png](img_5.png)
+
+**Итоговый файл конфигурации записан в `main.tf`**
