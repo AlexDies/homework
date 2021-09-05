@@ -311,7 +311,7 @@ ___
 
 Определил для каждой группы хостов свои факты
 
-12. Ответы на вопросы в README.md
+12. Ответы на вопросы в README.md в репозитории: https://github.com/AlexDies/AnsiblePlaybook
 
 ___
 **Необязательная часть**
@@ -336,4 +336,182 @@ ___
             Vault password:
             Decryption successful
 
-2. 
+2. Шифрование переменной `some_fact` значением `PaSSw0rd` и паролем `netology`. Добавление полученного шифрованного значения в `group_vars/all/exmp.yml`:
+
+Зашифровали текст `PaSSw0rd`:
+
+            root@vagrant:/home/vagrant/GITHUB/AnsiblePlaybook# ansible-vault encrypt_string "PaSSw0rd" --ask-vault-pass
+            New Vault password:
+            Confirm New Vault password:
+            !vault |
+                      $ANSIBLE_VAULT;1.1;AES256
+                      38393664623863323234356234353131313633376231313435383262613363343666626537336130
+                      6437353930353034346134353163366130353265646465630a333666376437623939303764363864
+                      32626630643439653166333435633730363965313639646336383665636634393562323634393165
+                      3932613136353165350a656636633733303834643263393533313464383966636639386266313933
+                      3264
+            Encryption successful
+
+Подставили в переменную `some_fact` в `group_vars/all/exmp.yml`:
+
+            ---
+              some_fact: !vault |
+                      $ANSIBLE_VAULT;1.1;AES256
+                      38393664623863323234356234353131313633376231313435383262613363343666626537336130
+                      6437353930353034346134353163366130353265646465630a333666376437623939303764363864
+                      32626630643439653166333435633730363965313639646336383665636634393562323634393165
+                      3932613136353165350a656636633733303834643263393533313464383966636639386266313933
+                      3264
+
+3. Запуск playbook с обновлением зашифрованного факта:
+
+            root@vagrant:/home/vagrant/GITHUB/AnsiblePlaybook# ansible-playbook -i inventory/prod.yml site.yml --ask-vault-pass
+            Vault password:
+            
+            PLAY [Print os facts] ***********************************************************************************
+            
+            TASK [Gathering Facts] **********************************************************************************
+            ok: [localhost]
+            [DEPRECATION WARNING]: Distribution Ubuntu 18.04 on host ubuntu should use /usr/bin/python3, but is
+            using /usr/bin/python for backward compatibility with prior Ansible releases. A future Ansible release
+            will default to using the discovered platform python for this host. See
+            https://docs.ansible.com/ansible/2.10/reference_appendices/interpreter_discovery.html for more
+            information. This feature will be removed in version 2.12. Deprecation warnings can be disabled by
+            setting deprecation_warnings=False in ansible.cfg.
+            ok: [ubuntu]
+            ok: [centos7]
+            
+            TASK [Print OS] *****************************************************************************************
+            ok: [localhost] => {
+                "msg": "Ubuntu"
+            }
+            ok: [centos7] => {
+                "msg": "CentOS"
+            }
+            ok: [ubuntu] => {
+                "msg": "Ubuntu"
+            }
+            
+            TASK [Print fact] ***************************************************************************************
+            ok: [localhost] => {
+                "msg": "PaSSw0rd"
+            }
+            ok: [centos7] => {
+                "msg": "el default fact"
+            }
+            ok: [ubuntu] => {
+                "msg": "deb default fact"
+            }
+            
+            PLAY RECAP **********************************************************************************************
+            centos7                    : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+            localhost                  : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+            ubuntu                     : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+Запрос пароля происходит успешно, после расшифровки виден пароль
+
+4. Добавление новой группы хостов `fedora`:
+
+Добавление группы `fed` c хостами` fedora`:
+
+            ---
+              el:
+                hosts:
+                  centos7:
+                    ansible_connection: docker
+              deb:
+                hosts:
+                  ubuntu:
+                    ansible_connection: docker
+              local:
+                hosts:
+                  localhost:
+                    ansible_connection: local
+              fed:
+                hosts:
+                  fedora:
+                    ansible_connection: docker
+
+Создание файла с переменными `group_vars/fed/examp.yml`:
+            
+            ---
+              some_fact: !vault |
+                      $ANSIBLE_VAULT;1.1;AES256
+                      38393664623863323234356234353131313633376231313435383262613363343666626537336130
+                      6437353930353034346134353163366130353265646465630a333666376437623939303764363864
+                      32626630643439653166333435633730363965313639646336383665636634393562323634393165
+                      3932613136353165350a656636633733303834643263393533313464383966636639386266313933
+                      3264
+
+Поднимаем docker-образ с fedora:
+
+            docker run -d --name fedora pycontribs/fedora sleep 600000000
+
+Результат вывода команды ansible-playbook:
+
+            root@vagrant:/home/vagrant/GITHUB/AnsiblePlaybook# ansible-playbook -i inventory/prod.yml site.yml --ask-vault-pass
+            Vault password:
+            
+            PLAY [Print os facts] ***********************************************************************************
+            
+            TASK [Gathering Facts] **********************************************************************************
+            ok: [localhost]
+            ok: [fedora]
+            [DEPRECATION WARNING]: Distribution Ubuntu 18.04 on host ubuntu should use /usr/bin/python3, but is
+            using /usr/bin/python for backward compatibility with prior Ansible releases. A future Ansible release
+            will default to using the discovered platform python for this host. See
+            https://docs.ansible.com/ansible/2.10/reference_appendices/interpreter_discovery.html for more
+            information. This feature will be removed in version 2.12. Deprecation warnings can be disabled by
+            setting deprecation_warnings=False in ansible.cfg.
+            ok: [ubuntu]
+            ok: [centos7]
+            
+            TASK [Print OS] *****************************************************************************************
+            ok: [localhost] => {
+                "msg": "Ubuntu"
+            }
+            ok: [fedora] => {
+                "msg": "Fedora"
+            }
+            ok: [centos7] => {
+                "msg": "CentOS"
+            }
+            ok: [ubuntu] => {
+                "msg": "Ubuntu"
+            }
+            
+            TASK [Print fact] ***************************************************************************************
+            ok: [localhost] => {
+                "msg": "PaSSw0rd"
+            }
+            ok: [centos7] => {
+                "msg": "el default fact"
+            }
+            ok: [ubuntu] => {
+                "msg": "deb default fact"
+            }
+            ok: [fedora] => {
+                "msg": "PaSSw0rd"
+            }
+            
+            PLAY RECAP **********************************************************************************************
+            centos7                    : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+            fedora                     : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+            localhost                  : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+            ubuntu                     : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+В итоге - всё работает.
+
+5. Bash-скрипт:
+
+
+docker run -d --name ubuntu pycontribs/ubuntu:latest sleep 600000000
+docker run -d --name centos7 pycontribs/centos:7 sleep 600000000
+docker run -d --name fedora pycontribs/fedora sleep 600000000
+
+ansible-playbook -i inventory/prod.yml site.yml --ask-vault-pass & echo 'netology'
+
+docker stop fedora
+docker stop ubuntu
+docker stop centos7
+
