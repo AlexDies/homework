@@ -500,18 +500,24 @@ ___
             localhost                  : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
             ubuntu                     : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 
-В итоге - всё работает.
+**В итоге - всё работает.**
 
 5. Bash-скрипт:
 
-
-docker run -d --name ubuntu pycontribs/ubuntu:latest sleep 600000000
-docker run -d --name centos7 pycontribs/centos:7 sleep 600000000
-docker run -d --name fedora pycontribs/fedora sleep 600000000
-
-ansible-playbook -i inventory/prod.yml site.yml --ask-vault-pass & echo 'netology'
-
-docker stop fedora
-docker stop ubuntu
-docker stop centos7
-
+        #!/bin/bash
+        docker run -d --name ubuntu pycontribs/ubuntu:latest sleep 600000000
+        docker run -d --name centos7 pycontribs/centos:7 sleep 600000000
+        docker run -d --name fedora pycontribs/fedora sleep 600000000
+        echo 'docker run'
+        ansible-playbook -i inventory/prod.yml site.yml --ask-vault-pass
+        
+        docker stop ubuntu
+        docker rm ubuntu
+        echo 'rm ubuntu'
+        docker stop fedora
+        docker rm fedora
+        echo 'rm fedora'
+        docker stop centos7
+        docker rm centos7
+        echo 'rm centos7'
+        echo 'end'
