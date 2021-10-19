@@ -59,3 +59,27 @@ ___
 ___
 **Выполнение ДЗ:**
 
+**Подготовка:**
+
+- Создаем 2 VM в yandex cloud
+- Редактируем host.yml в роли - указываем статические IP-адреса машин и юзера
+- В папку files добавляем id_rsa.pub с ПК
+- Запускаем `ansible-playbook -i inventory/cicd/hosts.yml site.yml`:
+  
+         PLAY RECAP ******************************************************************************nexus-01                   : ok=17   changed=15   unreachable=0    failed=0    skipped=2 
+            rescued=0    ignored=0   
+         sonar-01                   : ok=34   changed=16   unreachable=0    failed=0    skipped=1 
+            rescued=0    ignored=0   
+
+- Подключаемся к Nexus - меняем пароль
+- Подключаемся к Sonarqube - меняем пароль
+
+Инфраструктура готова
+
+**SonarQube**
+
+**Nexus**
+
+**Maven**
+
+Подготовка:
