@@ -223,3 +223,86 @@ ___
 
 Подготовка:
 
+1. Добавление пути в PATH: `export PATH=$PATH:/home/alexd/maven/bin`
+2. Удаляем из `apache-maven-<version>/conf/settings.xml` упоминание о правиле, отвергающем http соединение( раздел mirrors->id: my-repository-http-unblocker)
+Удаляем блок:
+
+      <mirror>
+         <id>maven-default-http-blocker</id>
+         <mirrorOf>external:http:*</mirrorOf>
+         <name>Pseudo repository to mirror external repositories initially using HTTP.</name>
+         <url>http://0.0.0.0/</url>
+         <blocked>true</blocked>
+      </mirror>
+   </mirrors>
+
+3. Проверяем `mvn --version`:
+
+         alexd@DESKTOP-92FN9PG:~/maven$ mvn --version
+         Apache Maven 3.8.3 (ff8e977a158738155dc465c6a97ffaf31982d739)
+         Maven home: /home/alexd/maven/apache-maven-3.8.3
+         Java version: 1.8.0_292, vendor: Private Build, runtime: /usr/lib/jvm/java-8-openjdk-amd64/jre
+         Default locale: en, platform encoding: UTF-8
+         OS name: "linux", version: "5.4.72-microsoft-standard-wsl2", arch: "amd64", family: "unix"
+4. Подготоваливаем `pom-файл`.
+
+Основная часть:
+
+1. Редактируем `pom.xml` с зависимостями под наш артефакт из первого пункта задания для Nexus (java с версией 8_282)
+
+         <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         <modelVersion>4.0.0</modelVersion>
+         
+         <groupId>com.netology.app</groupId>
+         <artifactId>simple-app</artifactId>
+         <version>1.0-SNAPSHOT</version>
+            <repositories>
+            <repository>
+               <id>my-repo</id>
+               <name>maven-public</name>
+               <url>http://130.193.36.78:8081/repository/maven-releases/</url>
+            </repository>
+         </repositories>
+         <dependencies>
+            <dependency>
+               <groupId>netology</groupId>
+               <artifactId>java</artifactId>
+               <version>8_282</version>
+               <classifier>distrib</classifier>
+               <type>tar.gz</type>
+            </dependency>
+         </dependencies>
+         </project>
+
+2. Запуск команды `mvn package` в директории с `pom.xml`:
+
+         alexd@DESKTOP-92FN9PG:~/maven/apache-maven-3.8.3$ mvn package
+         [INFO] Scanning for projects...
+         [INFO] 
+         [INFO] --------------------< com.netology.app:simple-app >---------------------
+         [INFO] Building simple-app 1.0-SNAPSHOT
+         [INFO] --------------------------------[ jar ]---------------------------------        
+         Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-resources-plugin/2.6/maven-resources-plugin-2.6.pom
+         <МНОГО ЛОГА>
+         [INFO]
+         [INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ simple-app ---   
+
+         [WARNING] JAR will be empty - no content was marked for inclusion!
+         [INFO] Building jar: /home/alexd/maven/apache-maven-3.8.3/target/simple-app-1.0-SNAPSHOT.jar
+         [INFO] ------------------------------------------------------------------------        
+         [INFO] BUILD SUCCESS
+         [INFO] ------------------------------------------------------------------------        
+         [INFO] Total time:  20.762 s
+         [INFO] Finished at: 2021-10-20T23:22:21+03:00
+         [INFO] ------------------------------------------------------------------------ 
+
+3. Проверяем дирекотрию `~/.m2/repository/`:
+
+         alexd@DESKTOP-92FN9PG:~/.m2/repository/netology/java/8_282$ ls
+         _remote.repositories       java-8_282-distrib.tar.gz.sha1
+         java-8_282-distrib.tar.gz  java-8_282.pom.lastUpdated
+
+4. Исправленный файл `pom.xml` во вложении.
+
+
