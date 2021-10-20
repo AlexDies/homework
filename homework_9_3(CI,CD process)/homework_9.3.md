@@ -57,7 +57,7 @@ ___
 
 
 ___
-**Выполнение ДЗ:**
+## Выполнение ДЗ:
 
 **Подготовка:**
 
@@ -75,7 +75,7 @@ ___
 
 Инфраструктура готова
 ___
-**SonarQube**
+## SonarQube
 
 1. Создаем новый проект AlexDTest
 2. Скачиваем пакет sonar-scanner 
@@ -212,14 +212,14 @@ ___
 
 На этом данная часть задания закончена!
 ___
-**Nexus**
+## Nexus
 
 1. Загружаем файл с указанными параметрами в `maven-public`
 2. Загружаем аналогичный файл, но версии 8_102
 3. Оба файла загружены успешно!
 4. Файл `maven-metadata.xml` во вложении
 ___
-**Maven**
+## Maven
 
 Подготовка:
 
@@ -227,14 +227,14 @@ ___
 2. Удаляем из `apache-maven-<version>/conf/settings.xml` упоминание о правиле, отвергающем http соединение( раздел mirrors->id: my-repository-http-unblocker)
 Удаляем блок:
 
-      <mirror>
-         <id>maven-default-http-blocker</id>
-         <mirrorOf>external:http:*</mirrorOf>
-         <name>Pseudo repository to mirror external repositories initially using HTTP.</name>
-         <url>http://0.0.0.0/</url>
-         <blocked>true</blocked>
-      </mirror>
-   </mirrors>
+         <mirror>
+            <id>maven-default-http-blocker</id>
+            <mirrorOf>external:http:*</mirrorOf>
+            <name>Pseudo repository to mirror external repositories initially using HTTP.</name>
+            <url>http://0.0.0.0/</url>
+            <blocked>true</blocked>
+         </mirror>
+      </mirrors>
 
 3. Проверяем `mvn --version`:
 
