@@ -66,20 +66,160 @@ ___
 - В папку files добавляем id_rsa.pub с ПК
 - Запускаем `ansible-playbook -i inventory/cicd/hosts.yml site.yml`:
   
-         PLAY RECAP ******************************************************************************nexus-01                   : ok=17   changed=15   unreachable=0    failed=0    skipped=2 
-            rescued=0    ignored=0   
-         sonar-01                   : ok=34   changed=16   unreachable=0    failed=0    skipped=1 
-            rescued=0    ignored=0   
+         PLAY RECAP ******************************************************************************
+         nexus-01                   : ok=17   changed=15   unreachable=0    failed=0    skipped=2    rescued=0    ignored=0   
+         sonar-01                   : ok=34   changed=16   unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
 
 - Подключаемся к Nexus - меняем пароль
 - Подключаемся к Sonarqube - меняем пароль
 
 Инфраструктура готова
-
+___
 **SonarQube**
 
+1. Создаем новый проект AlexDTest
+2. Скачиваем пакет sonar-scanner 
+3. Добавляем переменную в PATH: `export PATH=$PATH:/home/alexd/sonar/bin`
+4. Проверяем версию сонара:
+   
+         alexd@DESKTOP-92FN9PG:~/sonar$ sonar-scanner --version
+         INFO: Scanner configuration file: /home/alexd/sonar/conf/sonar-scanner.properties
+         INFO: Project root configuration file: NONE
+         INFO: SonarScanner 4.6.2.2472
+         INFO: Java 11.0.11 AdoptOpenJDK (64-bit)
+         INFO: Linux 5.4.72-microsoft-standard-WSL2 amd64
+5. Запускаем анализатор против кода из example с дополнительным ключом `-Dsonar.coverage.exclusions=fail.py` 
+
+         alexd@DESKTOP-92FN9PG:/mnt/c/Users/AlexD/Documents/VSCodeProject/AnsiblePlaybook/AnsiblePlaybook/homework_9_3(CI,CD process)/example$ sonar-scanner   -Dsonar.projectKey=AlexDTest   -Dsonar.sources=.   -Dsonar.host.url=http://178.154.222.25:9000   -Dsonar.login=0ed89293a6ebf7288c2f02e36fe5a9594ddb760e -Dsonar.coverage.exclusions=fail.py
+         INFO: Scanner configuration file: /home/alexd/sonar/conf/sonar-scanner.properties
+         INFO: Project root configuration file: NONE
+         INFO: SonarScanner 4.6.2.2472
+         INFO: Java 11.0.11 AdoptOpenJDK (64-bit)
+         INFO: Linux 5.4.72-microsoft-standard-WSL2 amd64
+         INFO: User cache: /home/alexd/.sonar/cache
+         INFO: Scanner configuration file: /home/alexd/sonar/conf/sonar-scanner.properties
+         INFO: Project root configuration file: NONE
+         INFO: Analyzing on SonarQube server 9.1.0
+         INFO: Default locale: "en", source code encoding: "UTF-8" (analysis is platform dependent)
+         INFO: Load global settings
+         INFO: Load global settings (done) | time=73ms
+         INFO: Server id: 9CFC3560-AXyZ39G2O-GTy_7Ahicj
+         INFO: User cache: /home/alexd/.sonar/cache
+         INFO: Load/download plugins
+         INFO: Load plugins index
+         INFO: Load plugins index (done) | time=45ms
+         INFO: Load/download plugins (done) | time=97ms
+         INFO: Process project properties
+         INFO: Process project properties (done) | time=6ms
+         INFO: Execute project builders
+         INFO: Execute project builders (done) | time=1ms
+         INFO: Project key: AlexDTest
+         INFO: Base dir: /mnt/c/Users/AlexD/Documents/VSCodeProject/AnsiblePlaybook/AnsiblePlaybook/homework_9_3(CI,CD process)/example
+         INFO: Working dir: /mnt/c/Users/AlexD/Documents/VSCodeProject/AnsiblePlaybook/AnsiblePlaybook/homework_9_3(CI,CD process)/example/.scannerwork
+         INFO: Load project settings for component key: 'AlexDTest'
+         INFO: Load project settings for component key: 'AlexDTest' (done) | time=25ms
+         INFO: Load quality profiles
+         INFO: Load quality profiles (done) | time=64ms
+         INFO: Load active rules
+         INFO: Load active rules (done) | time=1740ms
+         INFO: Indexing files...
+         INFO: Project configuration:
+         INFO:   Excluded sources for coverage: fail.py
+         WARN: Thread[JGit-FileStoreAttributeReader-1,5,main]: got smaller file timestamp on /mnt/c (C:\), /mnt/c/Users/AlexD/Documents/VSCodeProject/AnsiblePlaybook/AnsiblePlaybook/.git: 2021-10-20T18:07:57Z < 2021-10-20T18:07:57.953388Z. Aborting measurement at resolution PT0.046612S.
+         INFO: 1 file indexed
+         INFO: 0 files ignored because of scm ignore settings
+         INFO: Quality profile for py: Sonar way
+         INFO: ------------- Run sensors on module AlexDTest
+         INFO: Load metrics repository
+         INFO: Load metrics repository (done) | time=32ms
+         INFO: Sensor Python Sensor [python]
+         WARN: Your code is analyzed as compatible with python 2 and 3 by default. This will prevent the detection of issues specific to python 2 or python 3. You can get a more precise analysis by setting a python version in your configuration via the parameter "sonar.python.version"
+         INFO: Starting global symbols computation
+         INFO: 1 source file to be analyzed
+         INFO: Load project repositories
+         INFO: Load project repositories (done) | time=24ms
+         INFO: 1/1 source file has been analyzed
+         INFO: Starting rules execution
+         INFO: 1 source file to be analyzed
+         INFO: 1/1 source file has been analyzed
+         INFO: Sensor Python Sensor [python] (done) | time=608ms
+         INFO: Sensor Cobertura Sensor for Python coverage [python]
+         INFO: Sensor Cobertura Sensor for Python coverage [python] (done) | time=28ms
+         INFO: Sensor PythonXUnitSensor [python]
+         INFO: Sensor PythonXUnitSensor [python] (done) | time=19ms
+         INFO: Sensor CSS Rules [cssfamily]
+         INFO: No CSS, PHP, HTML or VueJS files are found in the project. CSS analysis is skipped.
+         INFO: Sensor CSS Rules [cssfamily] (done) | time=0ms
+         INFO: Sensor JaCoCo XML Report Importer [jacoco]
+         INFO: 'sonar.coverage.jacoco.xmlReportPaths' is not defined. Using default locations: target/site/jacoco/jacoco.xml,target/site/jacoco-it/jacoco.xml,build/reports/jacoco/test/jacocoTestReport.xml
+         INFO: No report imported, no coverage information will be imported by JaCoCo XML Report Importer
+         INFO: Sensor JaCoCo XML Report Importer [jacoco] (done) | time=3ms
+         INFO: Sensor C# Project Type Information [csharp]
+         INFO: Sensor C# Project Type Information [csharp] (done) | time=1ms
+         INFO: Sensor C# Analysis Log [csharp]
+         INFO: Sensor C# Analysis Log [csharp] (done) | time=12ms
+         INFO: Sensor C# Properties [csharp]
+         INFO: Sensor C# Properties [csharp] (done) | time=0ms
+         INFO: Sensor JavaXmlSensor [java]
+         INFO: Sensor JavaXmlSensor [java] (done) | time=1ms
+         INFO: Sensor HTML [web]
+         INFO: Sensor HTML [web] (done) | time=2ms
+         INFO: Sensor VB.NET Project Type Information [vbnet]
+         INFO: Sensor VB.NET Project Type Information [vbnet] (done) | time=0ms
+         INFO: Sensor VB.NET Analysis Log [vbnet]
+         INFO: Sensor VB.NET Analysis Log [vbnet] (done) | time=11ms
+         INFO: Sensor VB.NET Properties [vbnet]
+         INFO: Sensor VB.NET Properties [vbnet] (done) | time=0ms
+         INFO: ------------- Run sensors on project
+         INFO: Sensor Zero Coverage Sensor
+         INFO: Sensor Zero Coverage Sensor (done) | time=1ms
+         INFO: SCM Publisher SCM provider for this project is: git
+         INFO: SCM Publisher 1 source file to be analyzed
+         INFO: SCM Publisher 1/1 source file have been analyzed (done) | time=453ms
+         INFO: CPD Executor Calculating CPD for 1 file
+         INFO: CPD Executor CPD calculation finished (done) | time=13ms
+         INFO: Analysis report generated in 106ms, dir size=103.1 kB
+         INFO: Analysis report compressed in 229ms, zip size=14.3 kB
+         INFO: Analysis report uploaded in 39ms
+         INFO: ANALYSIS SUCCESSFUL, you can browse http://178.154.222.25:9000/dashboard?id=AlexDTest
+         INFO: Note that you will be able to access the updated dashboard once the server has processed the submitted analysis report
+         INFO: More about the report processing at http://178.154.222.25:9000/api/ce/task?id=AXye43EZzf6IFc99Cfrj
+         INFO: Analysis total time: 5.008 s
+         INFO: ------------------------------------------------------------------------
+         INFO: EXECUTION SUCCESS
+         INFO: ------------------------------------------------------------------------
+         INFO: Total time: 5.752s
+         INFO: Final Memory: 8M/37M
+         INFO: ------------------------------------------------------------------------
+6. Проверяем WEB-интерфейс. Найдено 2 bugs и 1 Code Smell
+7. Исправление ошибок:
+
+         index = 0
+         def increment(index):
+            index += 1
+            return index
+         def get_square(numb):
+            return numb*numb
+         def print_numb(numb):
+            print("Number is {}".format(numb))
+
+
+         while (index < 10):
+            index = increment(index)
+            print(get_square(index))
+8. Повторный запуск и проверка что тест пройден успешно:
+![sonarQube.JPG](sonarQube.JPG)
+
+На этом данная часть задания закончена!
+___
 **Nexus**
 
+1. Загружаем файл с указанными параметрами в `maven-public`
+2. Загружаем аналогичный файл, но версии 8_102
+3. Оба файла загружены успешно!
+4. Файл `maven-metadata.xml` во вложении
+___
 **Maven**
 
 Подготовка:
+
