@@ -172,7 +172,7 @@ ___
                 'sh ansible-galaxy install -r requirements.yml -p roles'
             }
             stage("Run playbook"){
-                if (secret_check){
+                if (params.ecret_check){
                     sh 'ansible-playbook site.yml -i inventory/prod.yml'
                 }
                 else{
@@ -182,9 +182,99 @@ ___
             }
         }
 
+5.3 Добавлен ключ пользователя Jenkins с сервера-агента в GIT, чтобы можно было выкчивать роли.
 
-1. 
+6.1 Создан отдельный pipeline playbook со следующим содержимым:
 
-2. Внести необходимые изменения, чтобы Pipeline запускал `ansible-playbook` без флагов `--check --diff`, если не установлен параметр при запуске джобы (prod_run = True), по умолчанию параметр имеет значение False и запускает прогон с флагами `--check --diff`.
-3. Проверить работоспособность, исправить ошибки, исправленный Pipeline вложить в репозиторий в файл `ScriptedJenkinsfile`. Цель: получить собранный стек ELK в Ya.Cloud.
-4.  Отправить ссылку на репозиторий в ответе.
+6.2 Запуск джобы без галочки
+
+            Started by user admin1
+            [Pipeline] Start of Pipeline
+            [Pipeline] node
+            Running on Linux-agent-01 in /opt/jenkins_agent/workspace/ScriptTest/playbook
+            [Pipeline] {
+            [Pipeline] stage
+            [Pipeline] { (Git checkout)
+            [Pipeline] git
+            The recommended git tool is: NONE
+            using credential 555e5b54-c114-4c38-92a4-07a3f0bc647c
+            Fetching changes from the remote Git repository
+            > git rev-parse --resolve-git-dir /opt/jenkins_agent/workspace/ScriptTest/playbook/.git # timeout=10
+            > git config remote.origin.url git@github.com:AlexDies/AnsiblePlaybook.git # timeout=10
+            Fetching upstream changes from git@github.com:AlexDies/AnsiblePlaybook.git
+            > git --version # timeout=10
+            > git --version # 'git version 1.8.3.1'
+            using GIT_SSH to set credentials 
+            [INFO] Currently running in a labeled security context
+            [INFO] Currently SELinux is 'enforcing' on the host
+            > /usr/bin/chcon --type=ssh_home_t /opt/jenkins_agent/workspace/ScriptTest/playbook@tmp/jenkins-gitclient-ssh4244686603523034890.key
+            > git fetch --tags --progress git@github.com:AlexDies/AnsiblePlaybook.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+            Checking out Revision 6dac47c969490680972c0cbc79c143aab6de3b26 (refs/remotes/origin/Ansible_8_4)
+            Commit message: "add md"
+            > git rev-parse refs/remotes/origin/Ansible_8_4^{commit} # timeout=10
+            > git config core.sparsecheckout # timeout=10
+            > git checkout -f 6dac47c969490680972c0cbc79c143aab6de3b26 # timeout=10
+            > git branch -a -v --no-abbrev # timeout=10
+            > git branch -D Ansible_8_4 # timeout=10
+            > git checkout -b Ansible_8_4 6dac47c969490680972c0cbc79c143aab6de3b26 # timeout=10
+            > git rev-list --no-walk 6dac47c969490680972c0cbc79c143aab6de3b26 # timeout=10
+            [Pipeline] }
+            [Pipeline] // stage
+            [Pipeline] stage
+            [Pipeline] { (Sample define secret_check)
+            [Pipeline] }
+            [Pipeline] // stage
+            [Pipeline] stage
+            [Pipeline] { (Ansible Role Download)
+            [Pipeline] sh
+            + ansible-galaxy install -r /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/requirements.yml -p /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/roles
+            Starting galaxy role install process
+
+            - extracting elastic to /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/roles/elastic
+            - elastic (2.0.0) was installed successfully
+
+            - extracting kibana to /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/roles/kibana
+            - kibana (1.1.1) was installed successfully
+
+            - extracting filebeat to /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/roles/filebeat
+            - filebeat (1.0.1) was installed successfully
+            [Pipeline] }
+            [Pipeline] // stage
+            [Pipeline] stage
+            [Pipeline] { (Run playbook)
+            [Pipeline] sh
+            + ansible-playbook /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/site.yml -i /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/inventory/prod.yml --check --diff
+
+            [WARNING]: Unable to parse
+            /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/inventory/prod.yml as
+            an inventory source
+            [WARNING]: No inventory was parsed, only implicit localhost is available
+            [WARNING]: provided hosts list is empty, only localhost is available. Note that
+            the implicit localhost does not match 'all'
+            [WARNING]: Could not match supplied host pattern, ignoring: elasticsearch
+
+            PLAY [Install Elasticsearch] ***************************************************
+            skipping: no hosts matched
+            [WARNING]: Could not match supplied host pattern, ignoring: kibana
+
+            PLAY [Install kibana] **********************************************************
+            skipping: no hosts matched
+            [WARNING]: Could not match supplied host pattern, ignoring: app
+
+            PLAY [Install Filebeat] ********************************************************
+            skipping: no hosts matched
+
+            PLAY RECAP *********************************************************************
+
+            [Pipeline] }
+            [Pipeline] // stage
+            [Pipeline] }
+            [Pipeline] // node
+            [Pipeline] End of Pipeline
+            Finished: SUCCESS
+
+
+
+7. Внести необходимые изменения, чтобы Pipeline запускал `ansible-playbook` без флагов `--check --diff`, если не установлен параметр при запуске джобы (prod_run = True), по умолчанию параметр имеет значение False и запускает прогон с флагами `--check --diff`.
+8. Проверить работоспособность, исправить ошибки, исправленный Pipeline вложить в репозиторий в файл `ScriptedJenkinsfile`. Цель: получить собранный стек ELK в Ya.Cloud.
+9.  Отправить ссылку на репозиторий в ответе.
