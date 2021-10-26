@@ -129,7 +129,7 @@ ___
             [Pipeline] End of Pipeline
             Finished: SUCCESS
 
-3. Перенос `Declarative Pipeline` в репозиторий в файл `Jenkinsfile`:
+3.Перенос `Declarative Pipeline` в репозиторий в файл `Jenkinsfile`:
    
 4.Создание `Multibranch Pipeline` на запуск `Jenkinsfile` из репозитория в отдельной папке.
 4.1 Проверка запуска:
@@ -157,7 +157,7 @@ ___
         [Pipeline] End of Pipeline
         Finished: SUCCESS
 
-5. Создание `Scripted Pipeline` со скриптом `pipeline` из вложения в отдельной папке
+1. Создание `Scripted Pipeline` со скриптом `pipeline` из вложения в отдельной папке
 5.1 Добавление пунтка `Это - параметризованная сборка`. Добавлена `Boolean Parameter`: `secret_check`
 5.2 Добавлен код:
 
@@ -182,11 +182,37 @@ ___
             }
         }
 
-5.3 Добавлен ключ пользователя Jenkins с сервера-агента в GIT, чтобы можно было выкчивать роли.
+5.3 Добавлен `public key` пользователя Jenkins с сервера-агента в GIT, чтобы можно было выкачивать роли c `ansible-galaxy`
 
-6.1 Создан отдельный pipeline playbook со следующим содержимым:
+6.1 Создан отдельный pipeline `playbook` со следующим содержимым:
 
-6.2 Запуск джобы без галочки
+            node("linux"){
+                stage("Git checkout"){
+                    git branch: 'Ansible_8_4', credentialsId: '555e5b54-c114-4c38-92a4-07a3f0bc647c', url: 'git@github.com:AlexDies/AnsiblePlaybook.git'
+                    
+                }
+                stage("Sample define secret_check"){
+                    prod_run=true
+                }
+                stage("Ansible Role Download"){
+                    sh 'ansible-galaxy install -r requirements.yml -p roles'
+                }
+                stage("Run playbook"){
+                    if (params.prod_run){
+                        sh 'ansible-playbook site.yml -i inventory/prod/hosts.yml'
+                    }
+                    else{
+                        sh 'ansible-playbook site.yml -i inventory/prod/hosts.yml --check --diff'
+                    }
+                    
+                }
+            }
+
+6.2 Ручное подключение к `jenkins-agent-01` и создание ключей от имени jenkins (ssh-keygen)
+
+6.3 Создание 3-х VM (Elastic, app, Kibana) под EK-стек на ya.cloud с пользователем jenkins и `public key ` с клиента `jenkins-agent-01`.
+
+7.1 Запуск джобы без галочки `prod_run` :
 
             Started by user admin1
             [Pipeline] Start of Pipeline
@@ -207,17 +233,17 @@ ___
             using GIT_SSH to set credentials 
             [INFO] Currently running in a labeled security context
             [INFO] Currently SELinux is 'enforcing' on the host
-            > /usr/bin/chcon --type=ssh_home_t /opt/jenkins_agent/workspace/ScriptTest/playbook@tmp/jenkins-gitclient-ssh4244686603523034890.key
+            > /usr/bin/chcon --type=ssh_home_t /opt/jenkins_agent/workspace/ScriptTest/playbook@tmp/jenkins-gitclient-ssh9964964847950214283.key
             > git fetch --tags --progress git@github.com:AlexDies/AnsiblePlaybook.git +refs/heads/*:refs/remotes/origin/* # timeout=10
-            Checking out Revision 6dac47c969490680972c0cbc79c143aab6de3b26 (refs/remotes/origin/Ansible_8_4)
-            Commit message: "add md"
+            Checking out Revision c45f5ae24d241cade2ca7daf19d036fa1a79c7eb (refs/remotes/origin/Ansible_8_4)
+            Commit message: "add"
             > git rev-parse refs/remotes/origin/Ansible_8_4^{commit} # timeout=10
             > git config core.sparsecheckout # timeout=10
-            > git checkout -f 6dac47c969490680972c0cbc79c143aab6de3b26 # timeout=10
+            > git checkout -f c45f5ae24d241cade2ca7daf19d036fa1a79c7eb # timeout=10
             > git branch -a -v --no-abbrev # timeout=10
             > git branch -D Ansible_8_4 # timeout=10
-            > git checkout -b Ansible_8_4 6dac47c969490680972c0cbc79c143aab6de3b26 # timeout=10
-            > git rev-list --no-walk 6dac47c969490680972c0cbc79c143aab6de3b26 # timeout=10
+            > git checkout -b Ansible_8_4 c45f5ae24d241cade2ca7daf19d036fa1a79c7eb # timeout=10
+            > git rev-list --no-walk c45f5ae24d241cade2ca7daf19d036fa1a79c7eb # timeout=10
             [Pipeline] }
             [Pipeline] // stage
             [Pipeline] stage
@@ -227,44 +253,123 @@ ___
             [Pipeline] stage
             [Pipeline] { (Ansible Role Download)
             [Pipeline] sh
-            + ansible-galaxy install -r /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/requirements.yml -p /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/roles
+            + ansible-galaxy install -r requirements.yml -p roles
+
             Starting galaxy role install process
-
-            - extracting elastic to /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/roles/elastic
-            - elastic (2.0.0) was installed successfully
-
-            - extracting kibana to /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/roles/kibana
-            - kibana (1.1.1) was installed successfully
-
-            - extracting filebeat to /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/roles/filebeat
-            - filebeat (1.0.1) was installed successfully
+            - elastic (2.0.0) is already installed, skipping.
+            - kibana (1.1.1) is already installed, skipping.
+            - filebeat (1.0.1) is already installed, skipping.
             [Pipeline] }
             [Pipeline] // stage
             [Pipeline] stage
             [Pipeline] { (Run playbook)
             [Pipeline] sh
-            + ansible-playbook /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/site.yml -i /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/inventory/prod.yml --check --diff
-
-            [WARNING]: Unable to parse
-            /opt/jenkins_agent/workspace/ScriptTest/playbook/playbook/inventory/prod.yml as
-            an inventory source
-            [WARNING]: No inventory was parsed, only implicit localhost is available
-            [WARNING]: provided hosts list is empty, only localhost is available. Note that
-            the implicit localhost does not match 'all'
-            [WARNING]: Could not match supplied host pattern, ignoring: elasticsearch
+            + ansible-playbook site.yml -i inventory/prod/hosts.yml --check --diff
 
             PLAY [Install Elasticsearch] ***************************************************
-            skipping: no hosts matched
-            [WARNING]: Could not match supplied host pattern, ignoring: kibana
+
+            TASK [Gathering Facts] *********************************************************
+
+            ok: [el-instance]
+
+            TASK [elastic : Fail if unsupported system detected] ***************************
+            skipping: [el-instance]
+
+            TASK [elastic : include_tasks] *************************************************
+            included: /opt/jenkins_agent/workspace/ScriptTest/playbook/roles/elastic/tasks/download_yum.yml for el-instance
+
+            TASK [elastic : Download Elasticsearch's rpm] **********************************
+
+            ok: [el-instance -> localhost]
+
+            TASK [elastic : Copy Elasticsearch to managed node] ****************************
+
+            ok: [el-instance]
+
+            TASK [elastic : include_tasks] *************************************************
+            included: /opt/jenkins_agent/workspace/ScriptTest/playbook/roles/elastic/tasks/install_yum.yml for el-instance
+
+            TASK [elastic : Install Elasticsearch] *****************************************
+
+            ok: [el-instance]
+
+            TASK [elastic : Configure Elasticsearch] ***************************************
+
+            ok: [el-instance]
 
             PLAY [Install kibana] **********************************************************
-            skipping: no hosts matched
-            [WARNING]: Could not match supplied host pattern, ignoring: app
+
+            TASK [Gathering Facts] *********************************************************
+
+            ok: [k-instance]
+
+            TASK [kibana : Fail if unsupported system detected] ****************************
+            skipping: [k-instance]
+
+            TASK [kibana : include_tasks] **************************************************
+            included: /opt/jenkins_agent/workspace/ScriptTest/playbook/roles/kibana/tasks/download_yum.yml for k-instance
+
+            TASK [kibana : Download Kibana rpm] ********************************************
+
+            ok: [k-instance -> localhost]
+
+            TASK [kibana : Copy kibana to managed node] ************************************
+
+            ok: [k-instance]
+
+            TASK [kibana : include_tasks] **************************************************
+
+            included: /opt/jenkins_agent/workspace/ScriptTest/playbook/roles/kibana/tasks/install_yum.yml for k-instance
+
+            TASK [kibana : Install kibana yum] *********************************************
+
+            ok: [k-instance]
+
+            TASK [kibana : Configure Kibana] ***********************************************
+            ok: [k-instance]
 
             PLAY [Install Filebeat] ********************************************************
-            skipping: no hosts matched
+
+            TASK [Gathering Facts] *********************************************************
+
+            ok: [application-instance]
+
+            TASK [filebeat : Fail if unsupported system detected] **************************
+            skipping: [application-instance]
+
+            TASK [filebeat : include_tasks] ************************************************
+            included: /opt/jenkins_agent/workspace/ScriptTest/playbook/roles/filebeat/tasks/download_yum.yml for application-instance
+
+            TASK [filebeat : Download filebeat rpm] ****************************************
+
+            ok: [application-instance -> localhost]
+
+            TASK [filebeat : Copy filebeat to managed node] ********************************
+
+            ok: [application-instance]
+
+            TASK [filebeat : include_tasks] ************************************************
+            included: /opt/jenkins_agent/workspace/ScriptTest/playbook/roles/filebeat/tasks/install_yum.yml for application-instance
+
+            TASK [filebeat : Install filebeat] *********************************************
+
+            ok: [application-instance]
+
+            TASK [filebeat : Configure filebeat] *******************************************
+
+            ok: [application-instance]
+
+            TASK [filebeat : Set filebeat systemwork] **************************************
+
+            skipping: [application-instance]
+
+            TASK [filebeat : Load kibana dashboard] ****************************************
+            skipping: [application-instance]
 
             PLAY RECAP *********************************************************************
+            application-instance       : ok=7    changed=0    unreachable=0    failed=0    skipped=3    rescued=0    ignored=0   
+            el-instance                : ok=7    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+            k-instance                 : ok=7    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
 
             [Pipeline] }
             [Pipeline] // stage
@@ -273,8 +378,163 @@ ___
             [Pipeline] End of Pipeline
             Finished: SUCCESS
 
+7.2 Запуск джобы с галочкой `prod_run` :
 
+            Started by user admin1
+            [Pipeline] Start of Pipeline
+            [Pipeline] node
+            Running on Linux-agent-01 in /opt/jenkins_agent/workspace/ScriptTest/playbook
+            [Pipeline] {
+            [Pipeline] stage
+            [Pipeline] { (Git checkout)
+            [Pipeline] git
+            The recommended git tool is: NONE
+            using credential 555e5b54-c114-4c38-92a4-07a3f0bc647c
+            Fetching changes from the remote Git repository
+            > git rev-parse --resolve-git-dir /opt/jenkins_agent/workspace/ScriptTest/playbook/.git # timeout=10
+            > git config remote.origin.url git@github.com:AlexDies/AnsiblePlaybook.git # timeout=10
+            Fetching upstream changes from git@github.com:AlexDies/AnsiblePlaybook.git
+            > git --version # timeout=10
+            > git --version # 'git version 1.8.3.1'
+            using GIT_SSH to set credentials 
+            [INFO] Currently running in a labeled security context
+            [INFO] Currently SELinux is 'enforcing' on the host
+            > /usr/bin/chcon --type=ssh_home_t /opt/jenkins_agent/workspace/ScriptTest/playbook@tmp/jenkins-gitclient-ssh1269211734546797783.key
+            > git fetch --tags --progress git@github.com:AlexDies/AnsiblePlaybook.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+            Checking out Revision c45f5ae24d241cade2ca7daf19d036fa1a79c7eb (refs/remotes/origin/Ansible_8_4)
+            Commit message: "add"
+            > git rev-parse refs/remotes/origin/Ansible_8_4^{commit} # timeout=10
+            > git config core.sparsecheckout # timeout=10
+            > git checkout -f c45f5ae24d241cade2ca7daf19d036fa1a79c7eb # timeout=10
+            > git branch -a -v --no-abbrev # timeout=10
+            > git branch -D Ansible_8_4 # timeout=10
+            > git checkout -b Ansible_8_4 c45f5ae24d241cade2ca7daf19d036fa1a79c7eb # timeout=10
+            > git rev-list --no-walk c45f5ae24d241cade2ca7daf19d036fa1a79c7eb # timeout=10
+            [Pipeline] }
+            [Pipeline] // stage
+            [Pipeline] stage
+            [Pipeline] { (Sample define secret_check)
+            [Pipeline] }
+            [Pipeline] // stage
+            [Pipeline] stage
+            [Pipeline] { (Ansible Role Download)
+            [Pipeline] sh
+            + ansible-galaxy install -r requirements.yml -p roles
+            Starting galaxy role install process
+            - elastic (2.0.0) is already installed, skipping.
+            - kibana (1.1.1) is already installed, skipping.
+            - filebeat (1.0.1) is already installed, skipping.
+            [Pipeline] }
+            [Pipeline] // stage
+            [Pipeline] stage
+            [Pipeline] { (Run playbook)
+            [Pipeline] sh
+            + ansible-playbook site.yml -i inventory/prod/hosts.yml
 
-7. Внести необходимые изменения, чтобы Pipeline запускал `ansible-playbook` без флагов `--check --diff`, если не установлен параметр при запуске джобы (prod_run = True), по умолчанию параметр имеет значение False и запускает прогон с флагами `--check --diff`.
-8. Проверить работоспособность, исправить ошибки, исправленный Pipeline вложить в репозиторий в файл `ScriptedJenkinsfile`. Цель: получить собранный стек ELK в Ya.Cloud.
-9.  Отправить ссылку на репозиторий в ответе.
+            PLAY [Install Elasticsearch] ***************************************************
+
+            TASK [Gathering Facts] *********************************************************
+            ok: [el-instance]
+
+            TASK [elastic : Fail if unsupported system detected] ***************************
+            skipping: [el-instance]
+
+            TASK [elastic : include_tasks] *************************************************
+            included: /opt/jenkins_agent/workspace/ScriptTest/playbook/roles/elastic/tasks/download_yum.yml for el-instance
+
+            TASK [elastic : Download Elasticsearch's rpm] **********************************
+            changed: [el-instance -> localhost]
+
+            TASK [elastic : Copy Elasticsearch to managed node] ****************************
+            changed: [el-instance]
+
+            TASK [elastic : include_tasks] *************************************************
+            included: /opt/jenkins_agent/workspace/ScriptTest/playbook/roles/elastic/tasks/install_yum.yml for el-instance
+
+            TASK [elastic : Install Elasticsearch] *****************************************
+            changed: [el-instance]
+
+            TASK [elastic : Configure Elasticsearch] ***************************************
+            changed: [el-instance]
+
+            RUNNING HANDLER [elastic : restart Elasticsearch] ******************************
+            changed: [el-instance]
+
+            PLAY [Install kibana] **********************************************************
+
+            TASK [Gathering Facts] *********************************************************
+            ok: [k-instance]
+
+            TASK [kibana : Fail if unsupported system detected] ****************************
+            skipping: [k-instance]
+
+            TASK [kibana : include_tasks] **************************************************
+            included: /opt/jenkins_agent/workspace/ScriptTest/playbook/roles/kibana/tasks/download_yum.yml for k-instance
+
+            TASK [kibana : Download Kibana rpm] ********************************************
+            changed: [k-instance -> localhost]
+
+            TASK [kibana : Copy kibana to managed node] ************************************
+            changed: [k-instance]
+
+            TASK [kibana : include_tasks] **************************************************
+            included: /opt/jenkins_agent/workspace/ScriptTest/playbook/roles/kibana/tasks/install_yum.yml for k-instance
+
+            TASK [kibana : Install kibana yum] *********************************************
+            changed: [k-instance]
+
+            TASK [kibana : Configure Kibana] ***********************************************
+            changed: [k-instance]
+
+            RUNNING HANDLER [kibana : restart kibana] **************************************
+            changed: [k-instance]
+
+            PLAY [Install Filebeat] ********************************************************
+
+            TASK [Gathering Facts] *********************************************************
+            ok: [application-instance]
+
+            TASK [filebeat : Fail if unsupported system detected] **************************
+            skipping: [application-instance]
+
+            TASK [filebeat : include_tasks] ************************************************
+            included: /opt/jenkins_agent/workspace/ScriptTest/playbook/roles/filebeat/tasks/download_yum.yml for application-instance
+
+            TASK [filebeat : Download filebeat rpm] ****************************************
+            changed: [application-instance -> localhost]
+
+            TASK [filebeat : Copy filebeat to managed node] ********************************
+            changed: [application-instance]
+
+            TASK [filebeat : include_tasks] ************************************************
+            included: /opt/jenkins_agent/workspace/ScriptTest/playbook/roles/filebeat/tasks/install_yum.yml for application-instance
+
+            TASK [filebeat : Install filebeat] *********************************************
+            changed: [application-instance]
+
+            TASK [filebeat : Configure filebeat] *******************************************
+            changed: [application-instance]
+
+            TASK [filebeat : Set filebeat systemwork] **************************************
+            changed: [application-instance]
+
+            TASK [filebeat : Load kibana dashboard] ****************************************
+
+            ok: [application-instance]
+
+            RUNNING HANDLER [filebeat : restart filebeat] **********************************
+            changed: [application-instance]
+
+            PLAY RECAP *********************************************************************
+            application-instance       : ok=10   changed=6    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+            el-instance                : ok=8    changed=5    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+            k-instance                 : ok=8    changed=5    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
+            [Pipeline] }
+            [Pipeline] // stage
+            [Pipeline] }
+            [Pipeline] // node
+            [Pipeline] End of Pipeline
+            Finished: SUCCESS
+
+8. Работоспособность проверена! Pipeline приложен в файле `ScriptedJenkinsfile`.
