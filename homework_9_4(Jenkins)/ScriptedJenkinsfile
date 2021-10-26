@@ -1,0 +1,21 @@
+node("linux"){
+    stage("Git checkout"){
+        git branch: 'Ansible_8_4', credentialsId: '555e5b54-c114-4c38-92a4-07a3f0bc647c', url: 'git@github.com:AlexDies/AnsiblePlaybook.git'
+        
+    }
+    stage("Sample define secret_check"){
+        prod_run=true
+    }
+    stage("Ansible Role Download"){
+        sh 'ansible-galaxy install -r requirements.yml -p roles'
+    }
+    stage("Run playbook"){
+        if (params.prod_run){
+            sh 'ansible-playbook site.yml -i inventory/prod/hosts.yml'
+        }
+        else{
+            sh 'ansible-playbook site.yml -i inventory/prod/hosts.yml --check --diff'
+        }
+        
+    }
+}
