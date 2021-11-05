@@ -170,3 +170,4 @@ ___
             {"version": 3, "method": "GET", "message": "Running"}
 
 Всё работает успешно, Issue закрыт с комментарием
+123
