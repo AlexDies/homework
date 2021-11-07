@@ -203,7 +203,7 @@ ___
 
 ![Screenshot](chronograf.JPG)
 
-1. Настройка WEB-интерфейса `Chronograf` (`http://localhost:8888`):
+4. Настройка WEB-интерфейса `Chronograf` (`http://localhost:8888`):
 
 Для того, чтобы отображались поля в WEB-интерфейсе с `memory` и `disk` необходио в файл конфигурации `telegraf.conf` добавить следующее:
 
