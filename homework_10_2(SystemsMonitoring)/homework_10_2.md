@@ -201,8 +201,6 @@ ___
 
 Скриншот WEB-интерфейса `Chronograf` на `http://localhost:8888`:
 
-![alt text](chronograf.JPG)
-
 ![Screenshot](chronograf.JPG)
 
 1. Настройка WEB-интерфейса `Chronograf` (`http://localhost:8888`):
@@ -225,7 +223,7 @@ ___
 
       SELECT mean("used") AS "mean_used" FROM "telegraf"."autogen"."disk" WHERE time > :dashboardTime: AND time < :upperDashboardTime: AND "host"='telegraf-getting-started' GROUP BY time(:interval:) FILL(null)
 
-![Screenshot](disk.jpg)
+![Screenshot](disk.JPG)
 
 5. Добавление в конфигурацию telegraf плагина docker:
 
@@ -265,4 +263,4 @@ ___
 
 В WEB-интерфейсе в `Dashboards` добавлены разные метрики для отображения, в том числе и те, что создавались выше по заданию:
 
-![Screenshot](dashboard.jpg)
+![Screenshot](dashboard.JPG)
