@@ -201,9 +201,9 @@ ___
 
 Скриншот WEB-интерфейса `Chronograf` на `http://localhost:8888`:
 
-![alt text](chronograf.jpg)
+![alt text](chronograf.JPG)
 
-![Screenshot](chronograf.jpg)
+![Screenshot](chronograf.JPG)
 
 1. Настройка WEB-интерфейса `Chronograf` (`http://localhost:8888`):
 
