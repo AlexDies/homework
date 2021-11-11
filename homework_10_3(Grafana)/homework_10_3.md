@@ -64,14 +64,14 @@ ___
 
 Вход на WEB-интерфейс `Grafana` `localhost:3000` по паролю и логину `admin/admin` успешен.
 
-![Screenshot](grafana.jpg)
+![Screenshot](grafana.JPG)
 
 В `Confiuration` ->` Data Sources` выбран источник данных `Prometheus`:
 URL: http://localhost:9090
 Access: Browser
 Name: Prometheus
 
-![Screenshot](addprom.jpg)
+![Screenshot](addprom.JPG)
 ## Задание 2
 
 Создан новый Dashboard и добавлены следующие Panels:
@@ -99,13 +99,13 @@ Name: Prometheus
   
 `node_filesystem_free_bytes{fstype=~"ext4|xfs"} / node_filesystem_size_bytes{fstype=~"ext4|xfs"}*100`
 
-![Screenshot](dashboard.jpg)
+![Screenshot](dashboard.JPG)
 
 ## Задание 3
 
 Созданы alet-события на каждую панель Dashboard:
 
-![Screenshot](alert.jpg)
+![Screenshot](alert.JPG)
 ## Задание 4
 
 Файл dashboard.json во вложении
