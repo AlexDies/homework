@@ -1,0 +1,435 @@
+{
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "editable": true,
+    "gnetId": null,
+    "graphTooltip": 0,
+    "id": 1,
+    "links": [],
+    "panels": [
+      {
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+        "datasource": null,
+        "description": "",
+        "fieldConfig": {
+          "defaults": {
+            "color": {},
+            "custom": {},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": []
+            },
+            "unit": "percent"
+          },
+          "overrides": []
+        },
+        "fill": 5,
+        "fillGradient": 5,
+        "gridPos": {
+          "h": 9,
+          "w": 9,
+          "x": 0,
+          "y": 0
+        },
+        "hiddenSeries": false,
+        "id": 2,
+        "legend": {
+          "alignAsTable": false,
+          "avg": true,
+          "current": true,
+          "hideEmpty": false,
+          "max": true,
+          "min": true,
+          "rightSide": false,
+          "show": true,
+          "total": false,
+          "values": true
+        },
+        "lines": true,
+        "linewidth": 2,
+        "nullPointMode": "null",
+        "options": {
+          "alertThreshold": true
+        },
+        "percentage": false,
+        "pluginVersion": "7.4.0",
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": true,
+        "targets": [
+          {
+            "exemplar": false,
+            "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{job=\"nodeexporter\",mode=\"idle\"}[1m])) * 100)",
+            "format": "time_series",
+            "instant": false,
+            "interval": "",
+            "legendFormat": "Утилизация CPU",
+            "refId": "A"
+          }
+        ],
+        "thresholds": [
+          {
+            "$$hashKey": "object:1123",
+            "colorMode": "critical",
+            "fill": true,
+            "line": true,
+            "op": "gt",
+            "value": 70,
+            "yaxis": "left"
+          }
+        ],
+        "timeFrom": null,
+        "timeRegions": [],
+        "timeShift": null,
+        "title": "CPU Util",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+          "buckets": null,
+          "mode": "time",
+          "name": null,
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "$$hashKey": "object:599",
+            "decimals": null,
+            "format": "percent",
+            "label": "",
+            "logBase": 2,
+            "max": "100",
+            "min": null,
+            "show": true
+          },
+          {
+            "$$hashKey": "object:600",
+            "format": "none",
+            "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": true,
+          "alignLevel": 0
+        }
+      },
+      {
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+        "datasource": null,
+        "fieldConfig": {
+          "defaults": {
+            "color": {},
+            "custom": {},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": []
+            },
+            "unit": "short"
+          },
+          "overrides": []
+        },
+        "fill": 1,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 9,
+          "w": 9,
+          "x": 9,
+          "y": 0
+        },
+        "hiddenSeries": false,
+        "id": 10,
+        "legend": {
+          "alignAsTable": true,
+          "avg": true,
+          "current": true,
+          "hideEmpty": false,
+          "hideZero": false,
+          "max": false,
+          "min": false,
+          "rightSide": false,
+          "show": true,
+          "sideWidth": 250,
+          "total": false,
+          "values": true
+        },
+        "lines": true,
+        "linewidth": 1,
+        "nullPointMode": "null",
+        "options": {
+          "alertThreshold": true
+        },
+        "percentage": false,
+        "pluginVersion": "7.4.0",
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+          {
+            "expr": "node_load1",
+            "interval": "",
+            "legendFormat": "LA1",
+            "refId": "A"
+          },
+          {
+            "expr": "node_load5",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "LA5",
+            "refId": "B"
+          },
+          {
+            "expr": "node_load15",
+            "hide": false,
+            "interval": "",
+            "legendFormat": "LA15",
+            "refId": "C"
+          }
+        ],
+        "thresholds": [
+          {
+            "$$hashKey": "object:1489",
+            "colorMode": "critical",
+            "fill": true,
+            "line": true,
+            "op": "gt",
+            "value": 0.09,
+            "yaxis": "left"
+          }
+        ],
+        "timeFrom": null,
+        "timeRegions": [],
+        "timeShift": null,
+        "title": "Load average",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+          "buckets": null,
+          "mode": "time",
+          "name": null,
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "$$hashKey": "object:784",
+            "format": "short",
+            "label": "",
+            "logBase": 2,
+            "max": null,
+            "min": null,
+            "show": true
+          },
+          {
+            "$$hashKey": "object:785",
+            "format": "short",
+            "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false,
+          "alignLevel": null
+        }
+      },
+      {
+        "datasource": null,
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "custom": {},
+            "mappings": [],
+            "max": 16,
+            "min": 4,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "dark-red",
+                  "value": 15.4
+                }
+              ]
+            },
+            "unit": "decgbytes"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 9,
+          "w": 6,
+          "x": 18,
+          "y": 0
+        },
+        "id": 4,
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "text": {},
+          "textMode": "value"
+        },
+        "pluginVersion": "7.4.0",
+        "targets": [
+          {
+            "expr": "node_memory_Inactive_bytes/node_memory_MemAvailable_bytes*100",
+            "format": "table",
+            "instant": false,
+            "interval": "",
+            "legendFormat": "",
+            "refId": "A"
+          }
+        ],
+        "title": "Free memory",
+        "type": "stat"
+      },
+      {
+        "datasource": null,
+        "description": "",
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "custom": {},
+            "mappings": [],
+            "max": 100,
+            "min": 0,
+            "thresholds": {
+              "mode": "percentage",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "dark-red",
+                  "value": 0
+                },
+                {
+                  "color": "dark-red",
+                  "value": 10
+                },
+                {
+                  "color": "yellow",
+                  "value": 30
+                },
+                {
+                  "color": "green",
+                  "value": 40
+                }
+              ]
+            },
+            "unit": "percent"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 11,
+          "w": 24,
+          "x": 0,
+          "y": 9
+        },
+        "id": 6,
+        "options": {
+          "displayMode": "gradient",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "showUnfilled": true,
+          "text": {}
+        },
+        "pluginVersion": "7.4.0",
+        "targets": [
+          {
+            "exemplar": false,
+            "expr": "node_filesystem_free_bytes{fstype=~\"ext4|xfs\"} / node_filesystem_size_bytes{fstype=~\"ext4|xfs\"}*100",
+            "format": "time_series",
+            "instant": false,
+            "interval": "",
+            "intervalFactor": 1,
+            "legendFormat": "",
+            "refId": "A"
+          }
+        ],
+        "timeFrom": null,
+        "timeShift": null,
+        "title": "Free space disk",
+        "transformations": [],
+        "type": "bargauge"
+      }
+    ],
+    "refresh": "5s",
+    "schemaVersion": 27,
+    "style": "dark",
+    "tags": [],
+    "templating": {
+      "list": []
+    },
+    "time": {
+      "from": "now-5m",
+      "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Test",
+    "uid": "xMEV_Ocnk",
+    "version": 46
+  }

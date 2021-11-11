@@ -58,6 +58,54 @@
 
 ___
 ## Выполнение ДЗ:
+### Задание 1
 
+С помощью `docker-compose -d up` поднят необходимый стек.
 
+Вход на WEB-интерфейс `Grafana` `localhost:3000` по паролю и логину `admin/admin` успешен.
 
+![Screenshot](grafana.jpg)
+
+В `Confiuration` ->` Data Sources` выбран источник данных `Prometheus`:
+URL: http://localhost:9090
+Access: Browser
+Name: Prometheus
+
+![Screenshot](addprom.jpg)
+## Задание 2
+
+Создан новый Dashboard и добавлены следующие Panels:
+
+Привязка идет к `job = nodeexporter`
+
+- Утилизация CPU для nodeexporter:
+  
+`100 -(avg by (instance) (rate(node_cpu_seconds_total{job="nodeexporter",mode="idle"}[1m])) * 100)`
+- CPULA 1/5/15
+
+Добавим 3 Query:
+
+`node_load1`
+
+`node_load5`
+
+`node_load15`
+
+- Количество свободной оперативной памяти:
+  
+`node_memory_Inactive_bytes/node_memory_MemAvailable_bytes*100`
+
+- Количество места на файловой системе:
+  
+`node_filesystem_free_bytes{fstype=~"ext4|xfs"} / node_filesystem_size_bytes{fstype=~"ext4|xfs"}*100`
+
+![Screenshot](dashboard.jpg)
+
+## Задание 3
+
+Созданы alet-события на каждую панель Dashboard:
+
+![Screenshot](alert.jpg)
+## Задание 4
+
+Файл dashboard.json во вложении
