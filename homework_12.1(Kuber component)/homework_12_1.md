@@ -156,11 +156,11 @@ ___
       kube-scheduler-minikube.ru-central1.internal            1/1     Running   2 (5m6s ago)    4m47s   
       storage-provisioner                                     1/1     Running   0               4m48s
 
-По итогу - всё работает! Minikube запущен.
+**По итогу - всё работает! Minikube запущен.**
 ___
 ## Задача 2: Запуск Hello World
 
-2.1 Создание Deployment приложения `hello world`:
+2.1 Создание Deployment приложения `hello world` испольтзуя команду `kubectl create deployment hello-node --image=k8s.gcr.io/echoserver:1.4`:
  
       [root@minikube alexd]# kubectl create deployment hello-node --image=k8s.gcr.io/echoserver:1.4
       deployment.apps/hello-node created
@@ -214,7 +214,7 @@ ___
       | volumesnapshots             | minikube | disabled     | kubernetes            |
       |-----------------------------|----------|--------------|-----------------------|
 
-2.5 Установим аддон `ingress` (`dashboard` уже установлен) командой `minikube addons enable ingress` :
+2.5 Установим аддоны `ingress` и `dashboard` командой `minikube addons enable ingress` :
 
       [root@minikube alexd]# minikube addons enable ingress
           ▪ Using image k8s.gcr.io/ingress-nginx/controller:v1.0.4
@@ -228,25 +228,158 @@ ___
 3.1 Установим `kubectl` на рабочую машину для управление кластером `Minukube`:
 
       alexd@DESKTOP-92FN9PG:~$ kubectl version --client
-      Client Version: version.Info{Major:"1", Minor:"23", GitVersion:"v1.23.1", GitCommit:"86ec240af8cbd1b60bcc4c03c20da9b98005b92e", GitTreeState:"clean", BuildDate:"2021-12-16T11:41:01Z", GoVersion:"go1.17.5", Compiler:"gc", Platform:"linux/amd64"
+      Client Version: version.Info{Major:"1", Minor:"23", GitVersion:"v1.23.1",     GitCommit:"86ec240af8cbd1b60bcc4c03c20da9b98005b92e", GitTreeState:"clean", BuildDate:"2021-12-16T11:41:01Z", GoVersion:"go1.17.5", Compiler:"gc", Platform:"linux/amd64"
 
-3.2 Для подключения к minikube в облаке Яндекс необходимо перенести конфигурацию.
+3.2 Пересоздание кластера с ключем `--apiserver-ips`:
 
-Останавливаем minikube в YC с помощью `minikube stop`. Запускаем 
+Останавливаем minikube в YC с помощью `minikube stop`. Удаляем текущий класте `minikube delete` , так как нам необходимо запустить кластер с ключом `--apiserver-ips=<Внешний IP-адрес YC>`.
 
+Запускаем кластер заново, указывая ключ `--apiserver-ips` c внешним IP:
+`minikube start --apiserver-ips=84.201.158.88 --vm-driver=none`
 
-Копируем в папку на YC `/home/alexd/certkube` конфигурацию находяющуюся по пути` ~/.kube/config`, а также сертификат из `/root/.minikube/profiles/minikube/client.crt`, `/root/.minikube/profiles/minikube/client.key`, `/root/.minikube/ca.crt`
+Проверяем конфигурацию кластера по пути:
 
-Добавляем разрешения к файлам на чтение `chmod +r client.key config `
+      [root@minikube alexd]# cat ~/.minikube/profiles/minikube/config.json 
 
-alexd@DESKTOP-92FN9PG:~$ scp -r alexd@51.250.14.137:/home/alexd/certkube .
-alexd@DESKTOP-92FN9PG:~$ cp certkube/config ~/.kube/config 
-alexd@DESKTOP-92FN9PG:~$ cp certkube/client.crt ~/.ssh/
+      "KubernetesConfig": {
+                "KubernetesVersion": "v1.22.3",
+                "ClusterName": "minikube",
+                "Namespace": "default",
+                "APIServerName": "minikubeCA",
+                "APIServerNames": null,
+                "APIServerIPs": [
+                        "84.201.158.88"
+                ],
+                "DNSDomain": "cluster.local",
+                "ContainerRuntime": "docker",
+                "CRISocket": "",
+                "NetworkPlugin": "",
+                "FeatureGates": "",
+                "ServiceCIDR": "10.96.0.0/12",
+                "ImageRepository": "",
+                "LoadBalancerStartIP": "",
+                "LoadBalancerEndIP": "",
+                "CustomIngressCert": "",
+                "ExtraOptions": null,
+                "ShouldLoadCachedImages": false,
+                "EnableDefaultCNI": false,
+                "CNI": "",
+                "NodeIP": "",
+                "NodePort": 8443,
+                "NodeName": ""
+        },
+        "Nodes": [
+                {
+                        "Name": "m01",
+                        "IP": "10.128.0.29",
+                        "Port": 8443,
+                        "KubernetesVersion": "v1.22.3",
+                        "ControlPlane": true,
+                        "Worker": true
 
+**Внешний IP-адрес прописался в параметре `APIServerIPs`**
 
-minikube start --apiserver-ips=51.250.14.137 --vm-driver=none
+3.3 Для подключения к minikube в облаке Яндекс необходимо перенести конфигурацию с кластера на локальный ПК:
 
+Копируем в папку `/home/alexd/certkube` на YC конфигурацию находяющуюся по пути` ~/.kube/config`, а также сертификат из `/root/.minikube/profiles/minikube/client.crt`, `/root/.minikube/profiles/minikube/client.key`, `/root/.minikube/ca.crt`
 
-Подготовить рабочую машину для управления корпоративным кластером. Установить клиентское приложение kubectl.
-- подключиться к minikube 
-- проверить работу приложения из задания 2, запустив port-forward до кластера
+Добавляем разрешения к файлам на чтение `chmod +r certkube/client.key certkube/config`
+
+Переносим файл конфигурации и ключи на локальную машину с помощью `spc`:
+
+      alexd@DESKTOP-92FN9PG:~$ scp -r alexd@84.201.158.88:/home/alexd/certkube .
+
+Переносим сертификаты в отдельную папку по пути `~/.kube/minikubecrt/`, а файл конфигурации по пути `~/.kube/`:
+
+      alexd@DESKTOP-92FN9PG:~$ cp certkube/client.crt ~/.kube/minikubecrt/
+      alexd@DESKTOP-92FN9PG:~$ cp certkube/client.key ~/.kube/minikubecrt/
+      alexd@DESKTOP-92FN9PG:~$ cp certkube/ca.crt ~/.kube/minikubecrt/
+      alexd@DESKTOP-92FN9PG:~$ cp certkube/config ~/.kube/
+
+3.4 Редактируем файл конфигурации `config` по пути `~/.kube/` для `kubctl` на локальной машине:
+
+Редактирум параметры 
+
+      server: https://84.201.158.88:8443
+      certificate-authority: /home/alexd/.kube/minikubecrt/ca.crt
+      client-certificate: /home/alexd/.kube/minikubecrt/client.crt
+      client-key: /home/alexd/.kube/minikubecrt/client.key
+
+3.5 Запускаем `kubctl cluster-info`:
+
+      alexd@DESKTOP-92FN9PG:~$ kubectl cluster-info
+      Kubernetes control plane is running at https://84.201.158.88:8443
+      CoreDNS is running at https://84.201.158.88:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+      To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+
+      alexd@DESKTOP-92FN9PG:~$ kubectl get node
+      NAME                            STATUS   ROLES                  AGE   VERSION
+      minikube.ru-central1.internal   Ready    control-plane,master   21m   v1.22.3
+      alexd@DESKTOP-92FN9PG:~$ kubectl get ns
+      NAME              STATUS   AGE
+      default           Active   21m
+      kube-node-lease   Active   21m
+      kube-public       Active   21m
+      kube-system       Active   21m
+
+**Доступ с локальной машины есть!**
+___
+3.6 Повторим установку аддонов и приложения из `п.2` выше, так как мы переустанавливали кластер. 
+
+3.7 Создание сервиса для доступа `hello-node` извне с помощью `kubectl expose`:
+
+      [root@minikube alexd]# kubectl expose deployment hello-node --type=NodePort --port=8080    
+      service/hello-node exposed
+
+Используем флаг `--type=NodePort` т.к. `Minikube` не поддерживает сервис `LoadBalancer`.
+
+(Служба `NodePort` — это самый простой способ направить внешний трафик непосредственно в вашу службу. NodePort, как следует из названия, открывает определенный порт, и любой трафик, отправляемый на этот порт, перенаправляется в службу.)
+
+Проверяем запущенный сервис с помощью команды `kubectl get services`:
+
+      [root@minikube alexd]# kubectl get services
+      NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+      hello-node   NodePort    10.101.220.108   <none>        8080:32085/TCP   28s
+      kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP          124m
+
+Проверяем сервис `hello-node` с помощью команды `minikube service hello-node`:
+
+      [root@minikube alexd]# minikube service hello-node
+      |-----------|------------|-------------|--------------------------|
+      | NAMESPACE |    NAME    | TARGET PORT |           URL            |
+      |-----------|------------|-------------|--------------------------|
+      | default   | hello-node |        8080 | http://10.128.0.29:32085 |
+      |-----------|------------|-------------|--------------------------|
+      🎉  Opening service default/hello-node in default browser...
+      👉  http://10.128.0.29:32085
+
+Устанавливаем `socat`
+
+Делаем `port-forwarding` до сервиса `hello-node` с помощью команды `kubectl port-forward --address 0.0.0.0 service/hello-node 8081:8080`:
+
+      [root@minikube alexd]# kubectl port-forward --address 0.0.0.0 service/hello-node 8081:8080
+      Forwarding from 0.0.0.0:8081 -> 8080
+
+Проверям доступность приложения `hello-node` извне используя статический IP с локального ПК через `curl http://84.201.158.88:8081`:
+
+      alexd@DESKTOP-92FN9PG:~$ curl http://84.201.158.88:8081
+      CLIENT VALUES:
+      client_address=127.0.0.1
+      command=GET
+      real path=/
+      query=nil
+      request_version=1.1
+      request_uri=http://84.201.158.88:8080/
+
+      SERVER VALUES:
+      server_version=nginx: 1.10.0 - lua: 10001
+
+      HEADERS RECEIVED:
+      accept=*/*
+      host=84.201.158.88:8081
+      user-agent=curl/7.68.0
+      BODY:
+      -no body in request-alexd@DESKTOP-92FN9PG:~$
+
+**Всё работает, доступ есть!**
