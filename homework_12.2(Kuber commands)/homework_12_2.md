@@ -79,10 +79,18 @@ ___
     |-----------|------------|-------------|--------------------------|
 
 **Количество реплик подов в `deployment` по итогу стало равным 2**
-
+___
 ## Задание 2: Просмотр логов для разработки
 
+https://kubernetes.io/docs/reference/access-authn-authz/authentication/
 
+
+[root@minikube testuser]# kubectl create serviceaccount testuser
+serviceaccount/testuser created
+
+
+
+___
 ## Задание 3: Изменение количества реплик
 
 3.1 Масштабируем ресурсы `deployment` командой `kubectl scale --replicas=5 deployment hello-node`:
