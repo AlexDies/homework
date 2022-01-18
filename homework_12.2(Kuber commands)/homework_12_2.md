@@ -88,6 +88,75 @@ https://kubernetes.io/docs/reference/access-authn-authz/authentication/
 [root@minikube testuser]# kubectl create serviceaccount testuser
 serviceaccount/testuser created
 
+[root@minikube alexd]# kubectl -n app-namespace create serviceaccount testuser
+serviceaccount/testuser created
+
+[root@minikube alexd]# kubectl -n app-namespace apply -f testuser-role.yml 
+role.rbac.authorization.k8s.io/test-user-role created
+
+
+[root@minikube alexd]# kubectl -n app-namespace get roles.rbac.authorization.k8s.io
+NAME             CREATED AT
+test-user-role   2022-01-18T18:07:12Z
+[root@minikube alexd]# kubectl -n app-namespace get roles.rbac.authorization.k8s.io -o yaml
+apiVersion: v1
+items:
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: Role
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"rbac.authorization.k8s.io/v1","kind":"Role","metadata":{"annotations":{},"name":"test-user-role","namespace":"app-namespace"},"rules":[{"apiGroups":[""],"resources":["pods/log","pod/describe"],"verbs":["get"]}]}
+    creationTimestamp: "2022-01-18T18:07:12Z"
+    name: test-user-role
+    namespace: app-namespace
+    resourceVersion: "18872"
+    uid: 24e22510-d3dd-4ec4-a23d-50cc1a2c1ae4
+  rules:
+  - apiGroups:
+    - ""
+    resources:
+    - pods/log
+    - pod/describe
+    verbs:
+    - get
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+
+
+[root@minikube alexd]# kubectl -n app-namespace apply -f role-binding-testuser.yml 
+rolebinding.rbac.authorization.k8s.io/role-binding-testuser created
+
+
+
+[root@minikube alexd]# kubectl -n app-namespace get rolebindings.rbac.authorization.k8s.io role-binding-testuser
+NAME                    ROLE                  AGE
+role-binding-testuser   Role/test-user-role   24s
+[root@minikube alexd]# kubectl -n app-namespace get rolebindings.rbac.authorization.k8s.io role-binding-testuser -o yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"rbac.authorization.k8s.io/v1","kind":"RoleBinding","metadata":{"annotations":{},"name":"role-binding-testuser","namespace":"app-namespace"},"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"Role","name":"test-user-role"},"subjects":[{"apiGroup":"rbac.authorization.k8s.io","kind":"User","name":"testuser"}]}
+  creationTimestamp: "2022-01-18T18:10:56Z"
+  name: role-binding-testuser
+  namespace: app-namespace
+  resourceVersion: "19059"
+  uid: 6b65be6b-f9ea-4b8a-8e47-ef75808a807c
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: test-user-role
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: testuser
+
+
+
 
 
 ___
