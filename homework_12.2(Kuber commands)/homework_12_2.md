@@ -85,9 +85,6 @@ ___
 https://kubernetes.io/docs/reference/access-authn-authz/authentication/
 
 
-[root@minikube testuser]# kubectl create serviceaccount testuser
-serviceaccount/testuser created
-
 [root@minikube alexd]# kubectl -n app-namespace create serviceaccount testuser
 serviceaccount/testuser created
 
@@ -130,7 +127,6 @@ metadata:
 rolebinding.rbac.authorization.k8s.io/role-binding-testuser created
 
 
-
 [root@minikube alexd]# kubectl -n app-namespace get rolebindings.rbac.authorization.k8s.io role-binding-testuser
 NAME                    ROLE                  AGE
 role-binding-testuser   Role/test-user-role   24s
@@ -154,6 +150,17 @@ subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
   name: testuser
+
+
+
+
+
+root@minikube alexd]# kubectl get secret $(kubectl get serviceaccount testuser -o jsonpath='{.secrets[0].name}' --namespace app-namespace) -o jsonpath='{.data.token}' --namespace app-namespace | base64 -d 
+eyJhbGciOiJSUzI1NiIsImtpZCI6Im9JbHF1T0xsaWlXWndlZWFHZjloNXgzdEdkRWpzbnA0cEl1NXZLRmd6MGsifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJhcHAtbmFtZXNwYWNlIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6InRlc3R1c2VyLXRva2VuLWQ4bXd6Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InRlc3R1c2VyIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiYmRhMjIwODEtNjViZS00MWRkLWE4NzUtNDAzZjQ3MWY5MGVjIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmFwcC1uYW1lc3BhY2U6dGVzdHVzZXIifQ.jkwHrezj0dd3354W2wXntgpCqTOP3kNerkkoP0llthj5aW0rotYq7zT-kdDvVC8CMlC3y8et4oDEbO6S9ZR6BmLeS9qlITbHIVUtTBHw7RVtbO7m5N_QA8neZOHx9T3cXJJ3kQpvNE7bRj1BGqz9i3meCwjbvjx5Uhe-N_iJ20No2T1kf_jn7KqwMY3_-ic7WOvdWK8YCPYkyBfEs4fYKJpZAmY60E2Z1dtkEePU1r13RR67a7CGjtaV-z2yva2afC86q79Zk36spIfNCJjC_pr__OgmMXEuR9bBtHE4Vj2vYKoD92gQkD-ClwuRkd_frJuI8TKmxgk4k1GcbROFcA
+
+
+
+eyJhbGciOiJSUzI1NiIsImtpZCI6Im9JbHF1T0xsaWlXWndlZWFHZjloNXgzdEdkRWpzbnA0cEl1NXZLRmd6MGsifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJ0ZXN0LW9uZSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJ0ZXN0LXNhLW9uZS10b2tlbi0yYzdncSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJ0ZXN0LXNhLW9uZSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjBmMGJkYTVkLWM5YjAtNGFiNS1iZGI2LTY1NzM1ZTdjNDA2ZCIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDp0ZXN0LW9uZTp0ZXN0LXNhLW9uZSJ9.HdhoGm7RJOHC5OSpNio6_monuz1RAus-tm1GrTzpgGCI6mAYITD6HO1rtxPSiIF6pvRKhPd_O4ibHlP7USPG-h4cJtlNU00VaTwggDywgD-CUUTO1lrE3CHDvtSVEtRBDMpDl0DFyF2FV1wADftu4tMZsREVe3uE2Q9wfaRpbsPkKHgBeBloKNNII5RPMzmj7G1EyAYodLRs2RbW9jAcVG4AGvN5SPvMQ-l5PwMKCNHOem3zwXwNMsjd6NL05aoaYjK5c93SEHtM4Paf_tWBzGPT4hWOex9kNTvgpa_PCAJ2mtC7llh-I7R4bLmjW3WZ-RtbjFGFBHqolMG9Nt_cCA
 
 
 
