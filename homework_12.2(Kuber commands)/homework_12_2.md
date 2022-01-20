@@ -182,86 +182,46 @@ ___
 
 2.10 Проверяем содержание файла `kubeconfig` по пути `~/.kube/config`:
 
-apiVersion: v1
-clusters:
-- cluster:
-    certificate-authority: /root/.minikube/ca.crt
-    extensions:
-    - extension:
-        last-update: Thu, 20 Jan 2022 16:53:29 UTC
-        provider: minikube.sigs.k8s.io
-        version: v1.24.0
-      name: cluster_info
-    server: https://10.128.0.29:8443
-  name: minikube
-contexts:
-- context:
-    cluster: minikube
-    extensions:
-    - extension:
-        last-update: Thu, 20 Jan 2022 16:53:29 UTC
-        provider: minikube.sigs.k8s.io
-        version: v1.24.0
-      name: context_info
-    namespace: default
-    user: testuser
-  name: minikube
-current-context: minikube
-kind: Config
-preferences: {}
-users:
-- name: minikube
-  user:
-    client-certificate: /root/.minikube/profiles/minikube/client.crt
-    client-key: /root/.minikube/profiles/minikube/client.key
-- name: testuser
-  user:
-    token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ik5MalplR2pqQ1VLb2w0Znl6b25rMm1xRHlaRUVlS2JlRGF4Vl9vMXpHUjgifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJhcHAtbmFtZXNwYWNlIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6InRlc3R1c2VyLXRva2VuLWNobWpxIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InRlc3R1c2VyIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiYjYxMWU0MDYtZTMwYi00MTlkLThlNDEtOWU3OTIwNzIwMzRkIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmFwcC1uYW1lc3BhY2U6dGVzdHVzZXIifQ.rWKRUMe5KHkPUkLm5Yg-XDBF6DcOPQspyAfno0-3Kb3qfctYQiyz87Yc9xGTNHqIKRF1BbqFLKoEC_8yykElFxXvkPLg8Du4s3M5rwRe-tijQp8aJ-biHYRQcrFRB_MFtR0kewkdk16GQUDMzLxa64hYnaG-DTkELZXij_HVHB2qM5eDdgR7_gHWZigtwFJ8IJg85hvizNrW9LTGy2BhrhtqKannVP32QSfqK5-irDjOJoTH_DyAQCUl6S-1ftFockOySCx4qip7c6uVHnjWhOmuglIMlRgxML4cS1mxwkKNABcF9LoW6kWWMGrUyAXhbgY5ltEQcnXvB5lFQRE2Xw
-
-
-
-
-apiVersion: v1
-clusters:
-- cluster:
-    certificate-authority: /home/testuser/.kube/ca.crt
-    extensions:
-    - extension:
-        last-update: Thu, 20 Jan 2022 16:53:29 UTC
-        provider: minikube.sigs.k8s.io
-        version: v1.24.0
-      name: cluster_info
-    server: https://10.128.0.29:8443
-  name: minikube
-contexts:
-- context:
-    cluster: minikube
-    extensions:
-    - extension:
-        last-update: Thu, 20 Jan 2022 16:53:29 UTC
-        provider: minikube.sigs.k8s.io
-        version: v1.24.0
-      name: context_info
-    namespace: default
-    user: testuser
-  name: minikube
-- context:
-    cluster: minikube
-    namespace: app-namespace
-    user: testuser
-  name: test1
-current-context: test1
-kind: Config
-preferences: {}
-users:
-#- name: minikube
-#  user:
-#    client-certificate: /root/.minikube/profiles/minikube/client.crt
-#    client-key: /root/.minikube/profiles/minikube/client.key
-- name: testuser
-  user:
-    token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ik5MalplR2pqQ1VLb2w0Znl6b25rMm1xRHlaRUVlS2JlRGF4Vl9vMXpHUjgifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJhcHAtbmFtZXNwYWNlIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6InRlc3R1c2VyLXRva2VuLWNobWpxIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InRlc3R1c2VyIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiYjYxMWU0MDYtZTMwYi00MTlkLThlNDEtOWU3OTIwNzIwMzRkIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmFwcC1uYW1lc3BhY2U6dGVzdHVzZXIifQ.rWKRUMe5KHkPUkLm5Yg-XDBF6DcOPQspyAfno0-3Kb3qfctYQiyz87Yc9xGTNHqIKRF1BbqFLKoEC_8yykElFxXvkPLg8Du4s3M5rwRe-tijQp8aJ-biHYRQcrFRB_MFtR0kewkdk16GQUDMzLxa64hYnaG-DTkELZXij_HVHB2qM5eDdgR7_gHWZigtwFJ8IJg85hvizNrW9LTGy2BhrhtqKannVP32QSfqK5-irDjOJoTH_DyAQCUl6S-1ftFockOySCx4qip7c6uVHnjWhOmuglIMlRgxML4cS1mxwkKNABcF9LoW6kWWMGrUyAXhbgY5ltEQcnXvB5lFQRE2Xw
-
+    apiVersion: v1
+    clusters:
+    - cluster:
+        certificate-authority: /root/.minikube/ca.crt
+        extensions:
+        - extension:
+            last-update: Thu, 20 Jan 2022 16:53:29 UTC
+            provider: minikube.sigs.k8s.io
+            version: v1.24.0
+          name: cluster_info
+        server: https://10.128.0.29:8443
+      name: minikube
+    contexts:
+    - context:
+        cluster: minikube
+        extensions:
+        - extension:
+            last-update: Thu, 20 Jan 2022 16:53:29 UTC
+            provider: minikube.sigs.k8s.io
+            version: v1.24.0
+          name: context_info
+        namespace: default
+        user: testuser
+      name: minikube
+    - context:
+        cluster: minikube
+        namespace: app-namespace
+        user: testuser
+      name: test1
+    current-context: test1
+    kind: Config
+    preferences: {}
+    users:
+    - name: minikube
+      user:
+        client-certificate: /root/.minikube/profiles/minikube/client.crt
+        client-key: /root/.minikube/profiles/minikube/client.key
+    - name: testuser
+      user:
+        token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ik5MalplR2pqQ1VLb2w0Znl6b25rMm1xRHlaRUVlS2JlRGF4Vl9vMXpHUjgifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJhcHAtbmFtZXNwYWNlIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6InRlc3R1c2VyLXRva2VuLWNobWpxIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InRlc3R1c2VyIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiYjYxMWU0MDYtZTMwYi00MTlkLThlNDEtOWU3OTIwNzIwMzRkIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmFwcC1uYW1lc3BhY2U6dGVzdHVzZXIifQ.rWKRUMe5KHkPUkLm5Yg-XDBF6DcOPQspyAfno0-3Kb3qfctYQiyz87Yc9xGTNHqIKRF1BbqFLKoEC_8yykElFxXvkPLg8Du4s3M5rwRe-tijQp8aJ-biHYRQcrFRB_MFtR0kewkdk16GQUDMzLxa64hYnaG-DTkELZXij_HVHB2qM5eDdgR7_gHWZigtwFJ8IJg85hvizNrW9LTGy2BhrhtqKannVP32QSfqK5-irDjOJoTH_DyAQCUl6S-1ftFockOySCx4qip7c6uVHnjWhOmuglIMlRgxML4cS1mxwkKNABcF9LoW6kWWMGrUyAXhbgY5ltEQcnXvB5lFQRE2Xw
 
 2.11 Копируем сертифкат `ca.crt` из `/root/.minikube/` для нового пользователя `testuser`:
 
@@ -269,10 +229,56 @@ users:
 
 2.12 Копируем содержание `kubeconfig` `~/.kube/config` для нового пользователя `testuser` по пути `/home/testuser/.kube/config`:
 
+- Убираем 
+
+    name: minikube
+      user:
+        client-certificate: /root/.minikube/profiles/minikube/client.crt
+        client-key: /root/.minikube/profiles/minikube/client.key
+
+- Редактируем `certificate-authority: /home/testuser/.kube/ca.crt`
+
+Итог:
+
+    apiVersion: v1
+    clusters:
+    - cluster:
+        certificate-authority: /home/testuser/.kube/ca.crt
+        extensions:
+        - extension:
+            last-update: Thu, 20 Jan 2022 16:53:29 UTC
+            provider: minikube.sigs.k8s.io
+            version: v1.24.0
+          name: cluster_info
+        server: https://10.128.0.29:8443
+      name: minikube
+    contexts:
+    - context:
+        cluster: minikube
+        extensions:
+        - extension:
+            last-update: Thu, 20 Jan 2022 16:53:29 UTC
+            provider: minikube.sigs.k8s.io
+            version: v1.24.0
+          name: context_info
+        namespace: default
+        user: testuser
+      name: minikube
+    - context:
+        cluster: minikube
+        namespace: app-namespace
+        user: testuser
+      name: test1
+    current-context: test1
+    kind: Config
+    preferences: {}
+    users:
+    - name: testuser
+      user:
+        token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ik5MalplR2pqQ1VLb2w0Znl6b25rMm1xRHlaRUVlS2JlRGF4Vl9vMXpHUjgifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJhcHAtbmFtZXNwYWNlIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6InRlc3R1c2VyLXRva2VuLWNobWpxIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InRlc3R1c2VyIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiYjYxMWU0MDYtZTMwYi00MTlkLThlNDEtOWU3OTIwNzIwMzRkIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmFwcC1uYW1lc3BhY2U6dGVzdHVzZXIifQ.rWKRUMe5KHkPUkLm5Yg-XDBF6DcOPQspyAfno0-3Kb3qfctYQiyz87Yc9xGTNHqIKRF1BbqFLKoEC_8yykElFxXvkPLg8Du4s3M5rwRe-tijQp8aJ-biHYRQcrFRB_MFtR0kewkdk16GQUDMzLxa64hYnaG-DTkELZXij_HVHB2qM5eDdgR7_gHWZigtwFJ8IJg85hvizNrW9LTGy2BhrhtqKannVP32QSfqK5-irDjOJoTH_DyAQCUl6S-1ftFockOySCx4qip7c6uVHnjWhOmuglIMlRgxML4cS1mxwkKNABcF9LoW6kWWMGrUyAXhbgY5ltEQcnXvB5lFQRE2Xw
 
 
 2.13 Проверяем доступ от пользователя `testuser` на команды `kubectl logs pod <pod_id>, kubectl describe pod <pod_id>`:
-
 
 
 
