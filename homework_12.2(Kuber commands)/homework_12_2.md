@@ -82,87 +82,201 @@ ___
 ___
 ## Задание 2: Просмотр логов для разработки
 
-https://kubernetes.io/docs/reference/access-authn-authz/authentication/
+2.1 Пересоздаем кластер с новым IP полученным от YC: `minikube start --apiserver-ips=51.250.10.21 --vm-driver=none`
+
+2.2 Создаем новый `Namespace` для нового пользователя с названием `app-namespace`:
+
+    [root@minikube alexd]# kubectl create namespace app-namespace
+    namespace/app-namespace created
+
+2.3 Создаем новый `serviceaccount` с именем `testuser` и привязкой к `app-namespace`:
+
+    [root@minikube alexd]# kubectl -n app-namespace create serviceaccount testuser
+    serviceaccount/testuser created
+
+2.4 Экспортируем `token` созданного пользователя `testuser` и расшифровываем его из `base64`:
+
+    [root@minikube alexd]# export TOKENNAME=$(kubectl -n app-namespace get serviceaccount/testuser -o jsonpath='{.secrets[0].name}')
+
+    [root@minikube alexd]# export TOKEN=$(kubectl -n app-namespace get secret $TOKENNAME -o jsonpath='{.data.token}' | base64 --decode)
+
+    [root@minikube alexd]# echo $TOKEN
+    eyJhbGciOiJSUzI1NiIsImtpZCI6Ik5MalplR2pqQ1VLb2w0Znl6b25rMm1xRHlaRUVlS2JlRGF4Vl9vMXpHUjgifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJhcHAtbmFtZXNwYWNlIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6InRlc3R1c2VyLXRva2VuLWNobWpxIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InRlc3R1c2VyIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiYjYxMWU0MDYtZTMwYi00MTlkLThlNDEtOWU3OTIwNzIwMzRkIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmFwcC1uYW1lc3BhY2U6dGVzdHVzZXIifQ.rWKRUMe5KHkPUkLm5Yg-XDBF6DcOPQspyAfno0-3Kb3qfctYQiyz87Yc9xGTNHqIKRF1BbqFLKoEC_8yykElFxXvkPLg8Du4s3M5rwRe-tijQp8aJ-biHYRQcrFRB_MFtR0kewkdk16GQUDMzLxa64hYnaG-DTkELZXij_HVHB2qM5eDdgR7_gHWZigtwFJ8IJg85hvizNrW9LTGy2BhrhtqKannVP32QSfqK5-irDjOJoTH_DyAQCUl6S-1ftFockOySCx4qip7c6uVHnjWhOmuglIMlRgxML4cS1mxwkKNABcF9LoW6kWWMGrUyAXhbgY5ltEQcnXvB5lFQRE2Xw 
+
+2.5 Проверяем доступность к кластеру с помощью `curl` и данного токена:
 
 
-[root@minikube alexd]# kubectl -n app-namespace create serviceaccount testuser
-serviceaccount/testuser created
+[root@minikube alexd]# curl -k -H "Authorization: Bearer $TOKEN" -X GET "https://51.250.10.21:8443/api/v1/nodes"
+{
+  "kind": "Status",
+  "apiVersion": "v1",
+  "metadata": {
 
-[root@minikube alexd]# kubectl -n app-namespace apply -f testuser-role.yml 
-role.rbac.authorization.k8s.io/test-user-role created
+  },
+  "status": "Failure",
+  "message": "nodes is forbidden: User \"system:serviceaccount:app-namespace:testuser\" cannot list resource \"nodes\" in API group \"\" at the cluster scope",
+  "reason": "Forbidden",
+  "details": {
+    "kind": "nodes"
+  },
+  "code": 403
+
+Доступ с `token` есть, но данный аккаунт не является `clusterrole` и поэтому выдает ошибку.
+
+2.6 Создаем новую `Role` для нового пользователя с ограничениями только на просмотр логов и конфигурацию подов (`kubectl logs pod <pod_id>, kubectl describe pod <pod_id>`) :
+
+Содержание файла `testuser-role.yml`:
+    kind: Role
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      namespace: app-namespace
+      name: test-user-role
+    rules:
+    - apiGroups: [""]
+      resources: ["pods/log", "pod/describe"]
+      verbs: ["get"]
+
+Применение: 
+
+    [root@minikube alexd]# kubectl -n app-namespace apply -f testuser-role.yml 
+    role.rbac.authorization.k8s.io/test-user-role created
+
+2.7 Привязываем через `role-binding` созданную `role test-user-role` для пользователя `testuser`:
+
+Содержание файла `role-binding-testuser.yml`:
+
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: role-binding-testuser
+    subjects:
+    - kind: User
+      name: testuser
+      apiGroup: rbac.authorization.k8s.io
+    roleRef:
+      kind: Role
+      name: test-user-role
+      apiGroup: rbac.authorization.k8s.io
+
+Применение: 
+
+    [root@minikube alexd]# kubectl -n app-namespace apply -f role-binding-testuser.yml 
+    rolebinding.rbac.authorization.k8s.io/role-binding-testuser created
+
+    [root@minikube alexd]# kubectl -n app-namespace get rolebindings.rbac.authorization.k8s.io role-binding-testuser -o wide
+    NAME                    ROLE                  AGE    USERS      GROUPS   SERVICEACCOUNTS
+    role-binding-testuser   Role/test-user-role   2m5s   testuser
+
+2.8 Добавляем созданный `serviceaccount` `testuser` в `kubeconfig` с помощью команды `set-credentials`:
+
+    [root@minikube alexd]# kubectl -n app-namespace config set-credentials testuser --token=$TOKEN
+    User "testuser" set.
+
+2.9 Переключаем текущий `context` на созданного пользователя `testuser`:
+
+    [root@minikube alexd]# kubectl config set-context test1 --cluster minikube --user testuser --namespace app-namespace
 
 
-[root@minikube alexd]# kubectl -n app-namespace get roles.rbac.authorization.k8s.io
-NAME             CREATED AT
-test-user-role   2022-01-18T18:07:12Z
-[root@minikube alexd]# kubectl -n app-namespace get roles.rbac.authorization.k8s.io -o yaml
+    [root@minikube alexd]# kubectl config use-context test1 
+    Switched to context "test1".
+
+2.10 Проверяем содержание файла `kubeconfig` по пути `~/.kube/config`:
+
 apiVersion: v1
-items:
-- apiVersion: rbac.authorization.k8s.io/v1
-  kind: Role
-  metadata:
-    annotations:
-      kubectl.kubernetes.io/last-applied-configuration: |
-        {"apiVersion":"rbac.authorization.k8s.io/v1","kind":"Role","metadata":{"annotations":{},"name":"test-user-role","namespace":"app-namespace"},"rules":[{"apiGroups":[""],"resources":["pods/log","pod/describe"],"verbs":["get"]}]}
-    creationTimestamp: "2022-01-18T18:07:12Z"
-    name: test-user-role
+clusters:
+- cluster:
+    certificate-authority: /root/.minikube/ca.crt
+    extensions:
+    - extension:
+        last-update: Thu, 20 Jan 2022 16:53:29 UTC
+        provider: minikube.sigs.k8s.io
+        version: v1.24.0
+      name: cluster_info
+    server: https://10.128.0.29:8443
+  name: minikube
+contexts:
+- context:
+    cluster: minikube
+    extensions:
+    - extension:
+        last-update: Thu, 20 Jan 2022 16:53:29 UTC
+        provider: minikube.sigs.k8s.io
+        version: v1.24.0
+      name: context_info
+    namespace: default
+    user: testuser
+  name: minikube
+current-context: minikube
+kind: Config
+preferences: {}
+users:
+- name: minikube
+  user:
+    client-certificate: /root/.minikube/profiles/minikube/client.crt
+    client-key: /root/.minikube/profiles/minikube/client.key
+- name: testuser
+  user:
+    token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ik5MalplR2pqQ1VLb2w0Znl6b25rMm1xRHlaRUVlS2JlRGF4Vl9vMXpHUjgifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJhcHAtbmFtZXNwYWNlIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6InRlc3R1c2VyLXRva2VuLWNobWpxIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InRlc3R1c2VyIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiYjYxMWU0MDYtZTMwYi00MTlkLThlNDEtOWU3OTIwNzIwMzRkIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmFwcC1uYW1lc3BhY2U6dGVzdHVzZXIifQ.rWKRUMe5KHkPUkLm5Yg-XDBF6DcOPQspyAfno0-3Kb3qfctYQiyz87Yc9xGTNHqIKRF1BbqFLKoEC_8yykElFxXvkPLg8Du4s3M5rwRe-tijQp8aJ-biHYRQcrFRB_MFtR0kewkdk16GQUDMzLxa64hYnaG-DTkELZXij_HVHB2qM5eDdgR7_gHWZigtwFJ8IJg85hvizNrW9LTGy2BhrhtqKannVP32QSfqK5-irDjOJoTH_DyAQCUl6S-1ftFockOySCx4qip7c6uVHnjWhOmuglIMlRgxML4cS1mxwkKNABcF9LoW6kWWMGrUyAXhbgY5ltEQcnXvB5lFQRE2Xw
+
+
+
+
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: /home/testuser/.kube/ca.crt
+    extensions:
+    - extension:
+        last-update: Thu, 20 Jan 2022 16:53:29 UTC
+        provider: minikube.sigs.k8s.io
+        version: v1.24.0
+      name: cluster_info
+    server: https://10.128.0.29:8443
+  name: minikube
+contexts:
+- context:
+    cluster: minikube
+    extensions:
+    - extension:
+        last-update: Thu, 20 Jan 2022 16:53:29 UTC
+        provider: minikube.sigs.k8s.io
+        version: v1.24.0
+      name: context_info
+    namespace: default
+    user: testuser
+  name: minikube
+- context:
+    cluster: minikube
     namespace: app-namespace
-    resourceVersion: "18872"
-    uid: 24e22510-d3dd-4ec4-a23d-50cc1a2c1ae4
-  rules:
-  - apiGroups:
-    - ""
-    resources:
-    - pods/log
-    - pod/describe
-    verbs:
-    - get
-kind: List
-metadata:
-  resourceVersion: ""
-  selfLink: ""
+    user: testuser
+  name: test1
+current-context: test1
+kind: Config
+preferences: {}
+users:
+#- name: minikube
+#  user:
+#    client-certificate: /root/.minikube/profiles/minikube/client.crt
+#    client-key: /root/.minikube/profiles/minikube/client.key
+- name: testuser
+  user:
+    token: eyJhbGciOiJSUzI1NiIsImtpZCI6Ik5MalplR2pqQ1VLb2w0Znl6b25rMm1xRHlaRUVlS2JlRGF4Vl9vMXpHUjgifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJhcHAtbmFtZXNwYWNlIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6InRlc3R1c2VyLXRva2VuLWNobWpxIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InRlc3R1c2VyIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiYjYxMWU0MDYtZTMwYi00MTlkLThlNDEtOWU3OTIwNzIwMzRkIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmFwcC1uYW1lc3BhY2U6dGVzdHVzZXIifQ.rWKRUMe5KHkPUkLm5Yg-XDBF6DcOPQspyAfno0-3Kb3qfctYQiyz87Yc9xGTNHqIKRF1BbqFLKoEC_8yykElFxXvkPLg8Du4s3M5rwRe-tijQp8aJ-biHYRQcrFRB_MFtR0kewkdk16GQUDMzLxa64hYnaG-DTkELZXij_HVHB2qM5eDdgR7_gHWZigtwFJ8IJg85hvizNrW9LTGy2BhrhtqKannVP32QSfqK5-irDjOJoTH_DyAQCUl6S-1ftFockOySCx4qip7c6uVHnjWhOmuglIMlRgxML4cS1mxwkKNABcF9LoW6kWWMGrUyAXhbgY5ltEQcnXvB5lFQRE2Xw
 
 
-[root@minikube alexd]# kubectl -n app-namespace apply -f role-binding-testuser.yml 
-rolebinding.rbac.authorization.k8s.io/role-binding-testuser created
+2.11 Копируем сертифкат `ca.crt` из `/root/.minikube/` для нового пользователя `testuser`:
+
+    [root@minikube .kube]# cp /root/.minikube/ca.crt /home/testuser/.kube/
+
+2.12 Копируем содержание `kubeconfig` `~/.kube/config` для нового пользователя `testuser` по пути `/home/testuser/.kube/config`:
 
 
-[root@minikube alexd]# kubectl -n app-namespace get rolebindings.rbac.authorization.k8s.io role-binding-testuser
-NAME                    ROLE                  AGE
-role-binding-testuser   Role/test-user-role   24s
-[root@minikube alexd]# kubectl -n app-namespace get rolebindings.rbac.authorization.k8s.io role-binding-testuser -o yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"rbac.authorization.k8s.io/v1","kind":"RoleBinding","metadata":{"annotations":{},"name":"role-binding-testuser","namespace":"app-namespace"},"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"Role","name":"test-user-role"},"subjects":[{"apiGroup":"rbac.authorization.k8s.io","kind":"User","name":"testuser"}]}
-  creationTimestamp: "2022-01-18T18:10:56Z"
-  name: role-binding-testuser
-  namespace: app-namespace
-  resourceVersion: "19059"
-  uid: 6b65be6b-f9ea-4b8a-8e47-ef75808a807c
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: test-user-role
-subjects:
-- apiGroup: rbac.authorization.k8s.io
-  kind: User
-  name: testuser
+
+2.13 Проверяем доступ от пользователя `testuser` на команды `kubectl logs pod <pod_id>, kubectl describe pod <pod_id>`:
 
 
 
 
-
-root@minikube alexd]# kubectl get secret $(kubectl get serviceaccount testuser -o jsonpath='{.secrets[0].name}' --namespace app-namespace) -o jsonpath='{.data.token}' --namespace app-namespace | base64 -d 
-eyJhbGciOiJSUzI1NiIsImtpZCI6Im9JbHF1T0xsaWlXWndlZWFHZjloNXgzdEdkRWpzbnA0cEl1NXZLRmd6MGsifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJhcHAtbmFtZXNwYWNlIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6InRlc3R1c2VyLXRva2VuLWQ4bXd6Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InRlc3R1c2VyIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiYmRhMjIwODEtNjViZS00MWRkLWE4NzUtNDAzZjQ3MWY5MGVjIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmFwcC1uYW1lc3BhY2U6dGVzdHVzZXIifQ.jkwHrezj0dd3354W2wXntgpCqTOP3kNerkkoP0llthj5aW0rotYq7zT-kdDvVC8CMlC3y8et4oDEbO6S9ZR6BmLeS9qlITbHIVUtTBHw7RVtbO7m5N_QA8neZOHx9T3cXJJ3kQpvNE7bRj1BGqz9i3meCwjbvjx5Uhe-N_iJ20No2T1kf_jn7KqwMY3_-ic7WOvdWK8YCPYkyBfEs4fYKJpZAmY60E2Z1dtkEePU1r13RR67a7CGjtaV-z2yva2afC86q79Zk36spIfNCJjC_pr__OgmMXEuR9bBtHE4Vj2vYKoD92gQkD-ClwuRkd_frJuI8TKmxgk4k1GcbROFcA
-
-
-
-eyJhbGciOiJSUzI1NiIsImtpZCI6Im9JbHF1T0xsaWlXWndlZWFHZjloNXgzdEdkRWpzbnA0cEl1NXZLRmd6MGsifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJ0ZXN0LW9uZSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJ0ZXN0LXNhLW9uZS10b2tlbi0yYzdncSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJ0ZXN0LXNhLW9uZSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjBmMGJkYTVkLWM5YjAtNGFiNS1iZGI2LTY1NzM1ZTdjNDA2ZCIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDp0ZXN0LW9uZTp0ZXN0LXNhLW9uZSJ9.HdhoGm7RJOHC5OSpNio6_monuz1RAus-tm1GrTzpgGCI6mAYITD6HO1rtxPSiIF6pvRKhPd_O4ibHlP7USPG-h4cJtlNU00VaTwggDywgD-CUUTO1lrE3CHDvtSVEtRBDMpDl0DFyF2FV1wADftu4tMZsREVe3uE2Q9wfaRpbsPkKHgBeBloKNNII5RPMzmj7G1EyAYodLRs2RbW9jAcVG4AGvN5SPvMQ-l5PwMKCNHOem3zwXwNMsjd6NL05aoaYjK5c93SEHtM4Paf_tWBzGPT4hWOex9kNTvgpa_PCAJ2mtC7llh-I7R4bLmjW3WZ-RtbjFGFBHqolMG9Nt_cCA
-
-
+https://10.128.0.29:8443
 
 
 
