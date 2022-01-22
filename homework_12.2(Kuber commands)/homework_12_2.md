@@ -135,6 +135,8 @@ ___
       resources: ["pods", "pods/log"]
       verbs: ["get", "list"]
 
+`Примечание:` **Если убрать `verbs "list"` не будет работать автодополнение при командах `kubctl logs <id>` и `kubctl describe pods <id>`, но если подставить id вручную (предварительно зная его), то команды работать будут.** Решил оставить "list" для удобства, думаю это "не сломает" логику работы и задания.
+
 Применение: 
 
     [root@minikube alexd]# kubectl -n app-namespace apply -f testuser-role1.yml 
@@ -159,7 +161,7 @@ ___
       name: test-user-role
       apiGroup: "rbac.authorization.k8s.io"
 
-**Используем `kind: ServiceAccount`, так как мы созадвали ранее пользователя для `ServiceAccount`**
+`Примечание:` **Используем `kind: ServiceAccount`, так как мы созадвали ранее пользователя для `ServiceAccount`**
 
 Применение: 
 
