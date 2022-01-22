@@ -178,7 +178,7 @@ ___
     [root@minikube alexd]# kubectl -n app-namespace config set-credentials testuser --token=$TOKEN
     User "testuser" set.
 
-2.9 Переключаем текущий `context` на созданного пользователя `testuser`:
+2.9 Создаем новый`context`  `test1` для текущего кластера `minikube` и созданного пользователя `testuser` в `namespace`` app-namespace`:
 
     [root@minikube alexd]# kubectl config set-context test1 --cluster minikube --user testuser --namespace app-namespace
 
