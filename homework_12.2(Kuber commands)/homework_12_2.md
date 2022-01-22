@@ -105,25 +105,24 @@ ___
 
 2.5 Проверяем доступность к кластеру с помощью `curl` и данного токена:
 
+    [root@minikube alexd]# curl -k -H "Authorization: Bearer $TOKEN" -X GET "https://51.250.10.21:8443/api/v1/nodes"
+    {
+      "kind": "Status",
+      "apiVersion": "v1",
+      "metadata": {
 
-[root@minikube alexd]# curl -k -H "Authorization: Bearer $TOKEN" -X GET "https://51.250.10.21:8443/api/v1/nodes"
-{
-  "kind": "Status",
-  "apiVersion": "v1",
-  "metadata": {
-
-  },
-  "status": "Failure",
-  "message": "nodes is forbidden: User \"system:serviceaccount:app-namespace:testuser\" cannot list resource \"nodes\" in API group \"\" at the cluster scope",
-  "reason": "Forbidden",
-  "details": {
-    "kind": "nodes"
-  },
-  "code": 403
+      },
+      "status": "Failure",
+      "message": "nodes is forbidden: User \"system:serviceaccount:app-namespace:testuser\" cannot list resource \"nodes\" in API group \"\" at the cluster scope",
+      "reason": "Forbidden",
+      "details": {
+        "kind": "nodes"
+      },
+      "code": 403
 
 Доступ с `token` есть, но данный аккаунт не является `clusterrole` и поэтому выдает ошибку.
 
-2.6 Создаем новую `Role` для нового пользователя с ограничениями только на просмотр логов и конфигурацию подов (`kubectl logs pod <pod_id>, kubectl describe pod <pod_id>`) :
+2.6 Создаем новую `Role` для нового пользователя `testuser` с ограничениями только на просмотр логов и конфигурацию подов (`kubectl logs pod <pod_id>, kubectl describe pod <pod_id>`) :
 
 Содержание файла `testuser-role.yml`:
     kind: Role
@@ -132,13 +131,13 @@ ___
       namespace: app-namespace
       name: test-user-role
     rules:
-    - apiGroups: [""]
-      resources: ["pods/log", "pod/describe"]
-      verbs: ["get"]
+    - apiGroups: ["", "app"]
+      resources: ["pods", "pods/log"]
+      verbs: ["get", "list"]
 
 Применение: 
 
-    [root@minikube alexd]# kubectl -n app-namespace apply -f testuser-role.yml 
+    [root@minikube alexd]# kubectl -n app-namespace apply -f testuser-role1.yml 
     role.rbac.authorization.k8s.io/test-user-role created
 
 2.7 Привязываем через `role-binding` созданную `role test-user-role` для пользователя `testuser`:
@@ -149,14 +148,18 @@ ___
     kind: RoleBinding
     metadata:
       name: role-binding-testuser
+      namespace: app-namespace
     subjects:
-    - kind: User
+    - kind: ServiceAccount
       name: testuser
-      apiGroup: rbac.authorization.k8s.io
+      namespace: app-namespace
+      apiGroup: ""
     roleRef:
       kind: Role
       name: test-user-role
-      apiGroup: rbac.authorization.k8s.io
+      apiGroup: "rbac.authorization.k8s.io"
+
+**Используем `kind: ServiceAccount`, так как мы созадвали ранее пользователя для `ServiceAccount`**
 
 Применение: 
 
@@ -164,8 +167,8 @@ ___
     rolebinding.rbac.authorization.k8s.io/role-binding-testuser created
 
     [root@minikube alexd]# kubectl -n app-namespace get rolebindings.rbac.authorization.k8s.io role-binding-testuser -o wide
-    NAME                    ROLE                  AGE    USERS      GROUPS   SERVICEACCOUNTS
-    role-binding-testuser   Role/test-user-role   2m5s   testuser
+    NAME                    ROLE                  AGE   USERS   GROUPS   SERVICEACCOUNTS
+    role-binding-testuser   Role/test-user-role   62m                    app-namespace/testuser
 
 2.8 Добавляем созданный `serviceaccount` `testuser` в `kubeconfig` с помощью команды `set-credentials`:
 
@@ -175,10 +178,6 @@ ___
 2.9 Переключаем текущий `context` на созданного пользователя `testuser`:
 
     [root@minikube alexd]# kubectl config set-context test1 --cluster minikube --user testuser --namespace app-namespace
-
-
-    [root@minikube alexd]# kubectl config use-context test1 
-    Switched to context "test1".
 
 2.10 Проверяем содержание файла `kubeconfig` по пути `~/.kube/config`:
 
@@ -281,10 +280,74 @@ ___
 2.13 Проверяем доступ от пользователя `testuser` на команды `kubectl logs pod <pod_id>, kubectl describe pod <pod_id>`:
 
 
+    [testuser@minikube alexd]$ kubectl describe pods hello-node-7567d9fdc9-kz92n 
+    Name:         hello-node-7567d9fdc9-kz92n
+    Namespace:    app-namespace
+    Priority:     0
+    Node:         minikube.ru-central1.internal/10.128.0.29
+    Start Time:   Sat, 22 Jan 2022 09:10:09 +0000
+    Labels:       app=hello-node
+                  pod-template-hash=7567d9fdc9
+    Annotations:  <none>
+    Status:       Running
+    IP:           172.17.0.4
+    IPs:
+      IP:           172.17.0.4
+    Controlled By:  ReplicaSet/hello-node-7567d9fdc9
+    Containers:
+      echoserver:
+        Container ID:   docker://472e2537ae2e6611fb7e72f7aa7f3c6c7fe5fab726800503754aa78bdce4d0b4
+        Image:          k8s.gcr.io/echoserver:1.4
+        Image ID:       docker-pullable://gcr.io/google_containers/echoserver@sha256:5d99aa1120524c801bc8c1a7077e8f5ec122ba16b6dda1a5d3826057f67b9bcb
+        Port:           <none>
+        Host Port:      <none>
+        State:          Running
+          Started:      Sat, 22 Jan 2022 09:10:11 +0000
+        Ready:          True
+        Restart Count:  0
+        Environment:    <none>
+        Mounts:
+          /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-5jkql (ro)
+    Conditions:
+      Type              Status
+      Initialized       True
+      Ready             True
+      ContainersReady   True
+      PodScheduled      True
+    Volumes:
+      kube-api-access-5jkql:
+        Type:                    Projected (a volume that contains injected data from multiple sources)    
+        TokenExpirationSeconds:  3607
+        ConfigMapName:           kube-root-ca.crt
+        ConfigMapOptional:       <nil>
+        DownwardAPI:             true
+    QoS Class:                   BestEffort
+    Node-Selectors:              <none>
+    Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                                node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+    Events:                      <none>
 
-https://10.128.0.29:8443
+    [testuser@minikube alexd]$ kubectl logs hello-node-7567d9fdc9-kz92n          
 
 
+Проверяем доступ к другим командом от пользователя `testuser`:
+
+
+    [testuser@minikube alexd]$ kubectl get serviceaccounts 
+    Error from server (Forbidden): serviceaccounts is forbidden: User "system:serviceaccount:app-namespace:testuser" cannot list resource "serviceaccounts" in API group "" in the namespace "app-namespace" 
+
+    [testuser@minikube alexd]$ kubectl delete pods hello-node-7567d9fdc9-z4x4h 
+    Error from server (Forbidden): pods "hello-node-7567d9fdc9-z4x4h" is forbidden: User "system:serviceaccount:app-namespace:testuser" cannot delete resource "pods" in API group "" in the namespace "app-namespace"
+
+    [testuser@minikube alexd]$ kubectl get namespaces -A
+    Error from server (Forbidden): namespaces is forbidden: User "system:serviceaccount:app-namespace:testuser" cannot list resource "namespaces" in API group "" at the cluster scope
+
+    [testuser@minikube alexd]$ kubectl get nodes        
+    Error from server (Forbidden): nodes is forbidden: User "system:serviceaccount:app-namespace:testuser" 
+    cannot list resource "nodes" in API group "" at the cluster scope
+
+
+`Команды `kubectl logs pod <pod_id>`, `kubectl describe pod <pod_id>` работают успешно, доступа к другим ресурсам нет!`
 
 ___
 ## Задание 3: Изменение количества реплик
