@@ -125,6 +125,7 @@ ___
 2.6 Создаем новую `Role` для нового пользователя `testuser` с ограничениями только на просмотр логов и конфигурацию подов (`kubectl logs pod <pod_id>, kubectl describe pod <pod_id>`) :
 
 Содержание файла `testuser-role.yml`:
+
     kind: Role
     apiVersion: rbac.authorization.k8s.io/v1
     metadata:
