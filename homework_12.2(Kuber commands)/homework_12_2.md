@@ -231,12 +231,12 @@ ___
 
 2.12 Копируем содержание `kubeconfig` `~/.kube/config` для нового пользователя `testuser` по пути `/home/testuser/.kube/config`:
 
-- Убираем 
+- Убираем:
 
-    name: minikube
-      user:
-        client-certificate: /root/.minikube/profiles/minikube/client.crt
-        client-key: /root/.minikube/profiles/minikube/client.key
+      name: minikube
+        user:
+          client-certificate: /root/.minikube/profiles/minikube/client.crt
+          client-key: /root/.minikube/profiles/minikube/client.key
 
 - Редактируем `certificate-authority: /home/testuser/.kube/ca.crt`
 
