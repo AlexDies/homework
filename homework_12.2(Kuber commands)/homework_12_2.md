@@ -350,7 +350,7 @@ ___
     cannot list resource "nodes" in API group "" at the cluster scope
 
 
-** Команды `kubectl logs pod <pod_id>`, `kubectl describe pod <pod_id>` работают успешно, доступа к другим ресурсам нет!**
+**Команды `kubectl logs pod <pod_id>`, `kubectl describe pod <pod_id>` работают успешно, доступа к другим ресурсам нет!**
 
 ___
 ## Задание 3: Изменение количества реплик
