@@ -16,7 +16,7 @@ ___
 ## Выполнение ДЗ:
 ## Задание 1: Подготовить инвентарь kubespray
 
-1. Подготовим VM в Yandex Cloud:
+##### 1. Подготовим VM в Yandex Cloud:
 
 Необходима `1 Control Node(cp1)` и `4 Worker Node (node1,node2,node3,node4)`
 
@@ -86,10 +86,10 @@ ___
         address: 84.201.173.4
 
 **По умолчанию, при создании VM и добавлении ключа SSH используется пользователь yc-user!**
+___
+##### 2. Подготовка к установке Kubernetes с помощью kubespray
 
-2. Подготовка к установке Kubernetes с помощью kubespray
-
-2.1 Клонирование репозитория и установка зависимостей:
+- 2.1 Клонирование репозитория и установка зависимостей:
 
 Клонируем репозиторий:
 
@@ -108,7 +108,7 @@ ___
 Копирование примера в папку с вашей конфигурацией
 `cp -rfp inventory/sample inventory/mycluster`
 
-2.2 Создаем `host.yml` и задаем необходимые параметры:
+- 2.2 Создаем `host.yml` и задаем необходимые параметры:
 
 Для создания файла `host.yml` используем декларативный подход с помощью команды `declare`:
 
@@ -139,30 +139,31 @@ ___
 
 Появился файл `host.yml`, редактируем его:
 
-**etcd будет находится на control node**
+##### Примечание: 
+Etcd будет находится на control node
 
     all:
     hosts:
         cp1:
         ansible_host: 84.201.134.139
         ip: 84.201.134.139
-        access_ip: 84.201.134.139
+        #access_ip: 84.201.134.139
         node1:
         ansible_host: 84.201.130.228
         ip: 84.201.130.228
-        access_ip: 84.201.130.228
+        #access_ip: 84.201.130.228
         node2:
         ansible_host: 62.84.118.203
         ip: 62.84.118.203
-        access_ip: 62.84.118.203
+        #access_ip: 62.84.118.203
         node3:
         ansible_host: 62.84.116.185
         ip: 62.84.116.185
-        access_ip: 62.84.116.185
+        #access_ip: 62.84.116.185
         node4:
         ansible_host: 84.201.173.4
         ip: 84.201.173.4
-        access_ip: 84.201.173.4
+        #access_ip: 84.201.173.4
     children:
         kube_control_plane:
         hosts:
@@ -183,16 +184,23 @@ ___
         calico_rr:
         hosts: {}
 
+- 2.3 Добавим вшений доступ через Loadbalancer:
 
+По умолчанию, подключиться к данному кластеру извне не получится, поэтому, необходимо указать IP-адрес и порт для подключения через Loadbalancer.
 
-Добавим вшений доступ через Loadbalancer:
+В разделе `mycluster` ->` group_vars` ->`all` в файле `all.yml` интересует параметр `loadbalancer_apiserver`:
 
-23423423424222
+    ## External LB example config
+    ## apiserver_loadbalancer_domain_name: "elb.some.domain"
+    loadbalancer_apiserver:
+    address: 84.201.134.139
+    port: 6443
 
+Устанавливаем внешний IP-адрес Control Node.
 
-Смотрим настройки `Container runtime` для установки в качестве CRI `containerd`:
+- 2.4 Смотрим настройки `Container runtime` для установки в качестве CRI `containerd`:
 
-В разделе `mycluster` ->` group_vars` ->` k8s_cluster` в файле `k8s-cluster.yml`
+В разделе `mycluster` ->`group_vars` ->`k8s_cluster` в файле `k8s-cluster.yml`
 
     ## Container runtime
     ## docker for docker, crio for cri-o and containerd for containerd.
@@ -201,9 +209,9 @@ ___
 
 **По итогу, `container_manager` уже по умолчанию установлен в качестве `containerd`**
 
-2.3. Предварительно, необходимо будет подключиться к каждой созданной VM через `SSH yc-user@<IP>`, чтобы добавить эти машины в `ssh known_hosts`, иначе Ansible не сможет подключиться к удаленным машинам.
-
-3. Устанвока Kubernetes с помощью kubespray:
+- 2.5. Предварительно, необходимо будет подключиться к каждой созданной VM через `SSH yc-user@<IP>`, чтобы добавить эти машины в `ssh known_hosts`, иначе Ansible не сможет подключиться к удаленным машинам.
+___
+##### 3. Устанвока Kubernetes с помощью kubespray:
 
 Для установки используем следующую команду:
 
@@ -226,9 +234,8 @@ ___
 Ключ `-u=yc-user` позволяет нам выполнять подключение под данным пользователем, так как у нас все машины были созданы ранее по этому пользователю
 
 Ключ `--become` - необходим для повышения прав на ряд изменений на машинах (пример, смена hostname), без которого Ansible playbook выдаст ошибку (при условии, что мы запускаем не от root) 
-
-
-4. Проверяем доступность кластера:
+___
+##### 4. Проверяем доступность кластера c `Control Node`:
 
 На `Control Node` переключаемся на пользователя `root`(так как под ним был создан `config` файл) и подаем команду `kubectl cluster-info` и `kubctl get node`:
 
@@ -247,4 +254,25 @@ ___
     node4   Ready    <none>                 8m47s   v1.23.2
 
 **Доступ к кластеру есть! Ноды подключены и в статусе Ready**
+___
+##### 5. Проверяем доступность кластера с локального ПК:
 
+5.1 Копируем файл содержимое файла с `Control Node` `root@cp1:/home/yc-user# cat ~/.kube/config` на локальную машину `~/.kube/config`
+
+Меняем значение `server: https://84.201.134.139:6443` на внешний IP-адрес `Control Node`.
+
+    alexd@DESKTOP-92FN9PG:~$ kubectl cluster-info
+    Kubernetes control plane is running at https://84.201.134.139:6443
+
+    To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+
+
+    alexd@DESKTOP-92FN9PG:~$ kubectl get nodes
+    NAME    STATUS   ROLES                  AGE   VERSION
+    cp1     Ready    control-plane,master   24m   v1.23.2
+    node1   Ready    <none>                 23m   v1.23.2
+    node2   Ready    <none>                 23m   v1.23.2
+    node3   Ready    <none>                 23m   v1.23.2
+    node4   Ready    <none>                 23m   v1.23.2
+
+**Кластер доступен!**
