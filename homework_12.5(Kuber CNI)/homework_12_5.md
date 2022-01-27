@@ -10,7 +10,44 @@
 Требования: 
 * установить утилиту calicoctl;
 * получить 3 вышеописанных типа в консоли.
+___
+## Выполнение ДЗ:
 
-### Как оформить ДЗ?
+## Задание 1: установить в кластер CNI плагин Calico
 
-Выполненное домашнее задание пришлите ссылкой на .md-файл в вашем репозитории.
+1. Плагин Calico установлен по умолчанию в кластере после установке через kuberspray:
+
+    alexd@DESKTOP-92FN9PG:/mnt/c/Users/AlexD/Documents/VSCodeProject/AnsiblePlaybook/AnsiblePlaybook$ kubectl get pods -A     
+    NAMESPACE     NAME                                       READY   STATUS    RESTARTS      AGE
+    kube-system   calico-kube-controllers-7c4d5b7bf4-cp4h6   1/1     Running   5 (72m ago)   98m
+    kube-system   calico-node-2w7gv                          1/1     Running   0             100m
+    kube-system   calico-node-bpnms                          1/1     Running   0             100m
+    kube-system   calico-node-gkgj4                          1/1     Running   0             100m
+    kube-system   calico-node-qv2lg                          1/1     Running   0             100m
+    kube-system   calico-node-t4z59                          1/1     Running   0             100m
+    kube-system   coredns-76b4fb4578-55w9z                   1/1     Running   0             98m
+    kube-system   coredns-76b4fb4578-x6pbs                   1/1     Running   0             98m
+    kube-system   dns-autoscaler-7979fb6659-lr29n            1/1     Running   0             98m
+    kube-system   kube-apiserver-cp1                         1/1     Running   1             101m
+    kube-system   kube-controller-manager-cp1                1/1     Running   2 (97m ago)   101m
+    kube-system   kube-proxy-2xdcz                           1/1     Running   0             100m
+    kube-system   kube-proxy-9jcvz                           1/1     Running   0             101m
+    kube-system   kube-proxy-c5z2h                           1/1     Running   0             100m
+    kube-system   kube-proxy-ktg9h                           1/1     Running   0             100m
+    kube-system   kube-proxy-xl6xs                           1/1     Running   0             100m
+    kube-system   kube-scheduler-cp1                         1/1     Running   1             101m
+    kube-system   nodelocaldns-dl9dp                         1/1     Running   0             98m
+    kube-system   nodelocaldns-m42tc                         1/1     Running   0             98m
+    kube-system   nodelocaldns-pdq5h                         1/1     Running   0             98m
+    kube-system   nodelocaldns-q6nf9                         1/1     Running   0             98m
+    kube-system   nodelocaldns-r28w5                         1/1     Running   0             98m
+
+2. Установка приложения для проверки политики
+
+
+3. Настройка политики
+
+4. Проверка доступа к приложению извне:
+
+___
+## Задание 2: изучить, что запущено по умолчанию
