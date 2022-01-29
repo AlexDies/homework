@@ -45,6 +45,89 @@ ___
 2. Установка приложения для проверки политики
 
 
+root@cp1:/home/yc-user# cat /etc/cloud/templates/hosts.debian.tmpl 
+## template:jinja
+{#
+This file (/etc/cloud/templates/hosts.debian.tmpl) is only utilized
+if enabled in cloud-config.  Specifically, in order to enable it
+you need to add the following to config:
+   manage_etc_hosts: True
+-#}
+# Your system has configured 'manage_etc_hosts' as True.
+# As a result, if you wish for changes to this file to persist
+# then you will need to either
+# a.) make changes to the master file in /etc/cloud/templates/hosts.debian.tmpl      
+# b.) change or remove the value of 'manage_etc_hosts' in
+#     /etc/cloud/cloud.cfg or cloud-config from user-data
+#
+{# The value '{{hostname}}' will be replaced with the local-hostname -#}
+127.0.1.1 {{fqdn}} {{hostname}}
+127.0.0.1 localhost localhost.localdomain
+
+# The following lines are desirable for IPv6 capable hosts
+::1 ip6-localhost ip6-loopback localhost6 localhost6.localdomain
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+# Ansible inventory hosts BEGIN
+10.128.0.16 cp1.cluster.local cp1
+10.128.0.20 node1.cluster.local node1
+# Ansible inventory hosts END
+51.250.12.188 lb-apiserver.kubernetes.local
+
+
+
+
+root@cp1:/home/yc-user# cat /etc/hosts
+# Your system has configured 'manage_etc_hosts' as True.
+# As a result, if you wish for changes to this file to persist
+# then you will need to either
+# a.) make changes to the master file in /etc/cloud/templates/hosts.debian.tmpl      
+# b.) change or remove the value of 'manage_etc_hosts' in
+#     /etc/cloud/cloud.cfg or cloud-config from user-data
+#
+127.0.1.1 fhmdt3ip81auq46h720q.auto.internal fhmdt3ip81auq46h720q
+127.0.0.1 localhost localhost.localdomain
+
+# The following lines are desirable for IPv6 capable hosts
+::1 ip6-localhost ip6-loopback localhost6 localhost6.localdomain
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+# Ansible inventory hosts BEGIN
+10.128.0.16 cp1.cluster.local cp1
+10.128.0.20 node1.cluster.local node1
+# Ansible inventory hosts END
+51.250.12.188 lb-apiserver.kubernetes.local
+
+
+
+root@node1:/home/yc-user# cat /etc/hostname 
+node1
+root@node1:/home/yc-user# cat /etc/hosts
+# Your system has configured 'manage_etc_hosts' as True.
+# As a result, if you wish for changes to this file to persist
+# then you will need to either
+# a.) make changes to the master file in /etc/cloud/templates/hosts.debian.tmpl      
+# b.) change or remove the value of 'manage_etc_hosts' in
+#     /etc/cloud/cloud.cfg or cloud-config from user-data
+#
+127.0.1.1 fhm22ho1nvnqisr2dfco.auto.internal fhm22ho1nvnqisr2dfco
+127.0.0.1 localhost localhost.localdomain
+
+# The following lines are desirable for IPv6 capable hosts
+::1 ip6-localhost ip6-loopback localhost6 localhost6.localdomain
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+# Ansible inventory hosts BEGIN
+10.128.0.16 cp1.cluster.local cp1
+10.128.0.20 node1.cluster.local node1
+# Ansible inventory hosts END
+51.250.12.188 lb-apiserver.kubernetes.local
+
+
+
 
 
 3. Настройка политики
