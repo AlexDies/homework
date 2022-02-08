@@ -24,7 +24,7 @@ spec:
           name: test-volume
         env:
           - name: BASE_URL
-            value: backend:9000
+            value: http://backend:9000
       volumes:
         - name: test-volume
           persistentVolumeClaim:
