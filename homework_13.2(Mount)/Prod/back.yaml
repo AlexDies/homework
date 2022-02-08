@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels:
+    app: backend
+spec:
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - image: alexdies/backend
+        imagePullPolicy: IfNotPresent
+        name: backend
+        ports:
+        - containerPort: 9000
+        volumeMounts:
+        - mountPath: "/static"
+          name: test-volume
+        env:
+          - name: DATABASE_URL
+            value: postgres://postgres:postgres@postgres:5432/news
+      volumes:
+        - name: test-volume
+          persistentVolumeClaim:
+            claimName: test-dynamic-volume-claim

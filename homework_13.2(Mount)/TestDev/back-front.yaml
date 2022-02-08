@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-backend
+  labels:
+    app: frontend-backend
+spec:
+  selector:
+    matchLabels:
+      app: frontend-backend
+  template:
+    metadata:
+      labels:
+        app: frontend-backend
+    spec:
+      containers:
+      - image: alexdies/frontend
+        imagePullPolicy: IfNotPresent
+        name: frontend
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: "/static"
+          name: test-volume
+        env:
+          - name: BASE_URL
+            value: http://localhost:9000
+      - image: alexdies/backend
+        imagePullPolicy: IfNotPresent
+        name: backend
+        ports:
+        - containerPort: 9000
+        volumeMounts:
+        - mountPath: "/static"
+          name: test-volume
+        env:
+          - name: DATABASE_URL
+            value: postgres://postgres:postgres@postgres:5432/news
+      volumes:
+        - name: test-volume
+          emptyDir: {}

@@ -15,3 +15,8 @@
 Выполненное домашнее задание пришлите ссылкой на .md-файл в вашем репозитории.
 
 ---
+
+
+kubectl exec -ti multitool-55974d5464-5wpn8 -- psql --host=postgres --username=postgres --password -d news
+
+psql --host=postgres --username=postgres --password
