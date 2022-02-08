@@ -126,4 +126,46 @@ ___
 ___
 ## Задание 2: ручное масштабирование
 
+### 2.1 Увеличим количество реплик `frontend` и `backend` до 3-х:
 
+Подадим следующие команды:
+
+`kubectl scale --replicas=3 deployment backend`
+
+`kubectl scale --replicas=3 deployment frontend`
+
+Проверим количество запущенных подов:
+
+        kubectl get pods
+
+        NAME                                  READY   STATUS    RESTARTS        AGE
+        backend-59f97ccdff-4hd4q              1/1     Running   0               105m
+        backend-59f97ccdff-4s98j              1/1     Running   0               15s
+        backend-59f97ccdff-72x7q              1/1     Running   0               15s
+        frontend-7d475c98ff-8dsz8             1/1     Running   0               5s
+        frontend-7d475c98ff-9pswz             1/1     Running   0               105m
+        frontend-7d475c98ff-r9xb8             1/1     Running   0               5s
+        multitool-55974d5464-5wpn8            1/1     Running   1 (6h19m ago)   3d5h
+        nfs-server-nfs-server-provisioner-0   1/1     Running   0               4h26m
+        postgres-0                            1/1     Running   0               105m
+
+### 2.2 Уменьгим количество реплик `frontend` и `backend` до 1:
+
+Подадим следующие команды:
+
+`kubectl scale --replicas=1 deployment backend`
+
+`kubectl scale --replicas=1 deployment frontend`
+
+Проверим количество запущенных подов:
+
+        kubectl get pods
+
+        NAME                                  READY   STATUS    RESTARTS        AGE
+        backend-59f97ccdff-4hd4q              1/1     Running   0               107m
+        frontend-7d475c98ff-9pswz             1/1     Running   0               107m
+        multitool-55974d5464-5wpn8            1/1     Running   1 (6h21m ago)   3d5h
+        nfs-server-nfs-server-provisioner-0   1/1     Running   0               4h28m
+        postgres-0                            1/1     Running   0               107m
+
+В итоге мы можем видеть, что машстабирование подов работает успешно!
