@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-backend
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: frontend-backend
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: frontend-backend
+  template:
+    metadata:
+      labels:
+        app: frontend-backend
+    spec:
+      containers:
+      - image: "{{ .Values.image1.repository }}:{{ .Values.image1.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: IfNotPresent
+        name: frontend
+        ports:
+        - containerPort: {{ .Values.appPort.frontend }}
+        volumeMounts: 
+        - mountPath: {{ .Values.volumeMounts.mountPath }}
+          name: {{ .Values.volumeMounts.name }}
+        env:
+          {{- toYaml .Values.envfront | nindent 10 }} 
+      - image: "{{ .Values.image2.repository }}:{{ .Values.image2.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: IfNotPresent
+        name: backend
+        ports:
+        - containerPort: {{ .Values.appPort.backend }}
+        volumeMounts:
+        - mountPath: {{ .Values.volumeMounts.mountPath }}
+          name: {{ .Values.volumeMounts.name }}
+        env:
+          {{- toYaml .Values.envback | nindent 10 }}
+      volumes:
+        - name: {{ .Values.volumeMounts.name }}
+          emptyDir: {}
