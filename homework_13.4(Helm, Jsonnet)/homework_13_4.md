@@ -290,7 +290,7 @@ with install: Namespace "app1" in namespace "" exists and cannot be imported int
         version1        default         2               2022-02-10 17:48:44.1582973 +0300 MSK   deployed                 testchart-0.1.2                  1.18.0
         version3        default         1               2022-02-10 17:56:08.1082644 +0300 MSK   deployed                 testchart-0.1.2                  1.18.0
 
-Приложение успешно создано в другом `namespace app2 `!
+ Приложение успешно создано в другом `namespace app2 `!
 
         kubectl -n app2 get pod,deployments.apps,service,statefulsets.apps
 
