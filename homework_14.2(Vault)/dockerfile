@@ -1,0 +1,6 @@
+FROM fedora:latest
+RUN dnf install -y pip
+RUN pip install hvac
+COPY testapp.py /
+RUN chmod +x /testapp.py
+ENTRYPOINT [ "/testapp.py" ]
