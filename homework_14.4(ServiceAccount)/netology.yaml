@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  creationTimestamp: "2022-04-19T12:44:52Z"
+  name: netologyaccount
+  namespace: default
+  resourceVersion: "412651"
+  uid: d3f40d57-8af9-40e5-87bc-534b14472316
+secrets:
+- name: netologyaccount-token-dvnkk
