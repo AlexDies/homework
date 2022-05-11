@@ -229,7 +229,7 @@ resource "yandex_compute_instance" "private-vm" {
 }
 ```
 
-######Итоговый файл [main.tf](main.tf) 
+###### Итоговый файл [main.tf](main.tf) 
 
 #### 1.5 Проверяем доступность:
 
